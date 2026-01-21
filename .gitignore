@@ -1,0 +1,60 @@
+# Environment (contains secrets)
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Build outputs
+frontend/dist/
+backend/main
+backend/*.exe
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+vendor/
+bin/
+
+# Testing
+*.coverprofile
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Docker volumes (if accidentally created locally)
+redis_data/
+caddy_data/
+caddy_config/
+
+# Legacy certbot (migrated to Caddy)
+certbot/
+
+# Logs
+*.log
+logs/
+
+# Common tool caches
+.cache/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
