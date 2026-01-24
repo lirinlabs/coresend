@@ -107,8 +107,8 @@ func authMiddleware(next http.Handler) http.Handler {
 		}
 
 		derivedAddress := identity.AddressFromPublicKey(pubkey)
-		if derivedAddress != strings.ToLower(addressHeader) {
-			log.Printf("Auth failed: derived=%s, header=%s", derivedAddress, strings.ToLower(addressHeader))
+		if !strings.EqualFold(derivedAddress, addressHeader) {
+			log.Printf("Auth failed: derived=%s, header=%s", derivedAddress, addressHeader)
 			writeError(w, ErrCodeUnauthorized, "Address does not match public key", http.StatusUnauthorized)
 			return
 		}
@@ -134,7 +134,7 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if strings.ToLower(pathAddress) != strings.ToLower(addressHeader) {
+		if !strings.EqualFold(pathAddress, addressHeader) {
 			writeError(w, ErrCodeUnauthorized, "Address mismatch", http.StatusUnauthorized)
 			return
 		}
