@@ -356,4 +356,4 @@ air -c .air.toml
 
 ---
 
-This development guide provides the essential commands and workflows for effective CoreSend development. For coding standards, see [CODING_STANDARDS.md](CODING_STANDARDS.md). For testing guidelines, see [TESTING.md](TESTING.md).
+This development guide provides the essential commands and workflows for effective CoreSend development. For coding standards, see [CODING_STANDARDS.md](docs/CODING_STANDARDS.md). For testing guidelines, see [TESTING.md](docs/TESTING.md).

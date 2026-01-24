@@ -8,8 +8,7 @@ This document outlines the coding standards and conventions for the CoreSend pro
 - Follow official [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
 - Use `gofmt` for code formatting
 - Use `goimports` for import organization
-- Keep lines under 120 characters when possible
-- Use meaningful variable names, avoid abbreviations
+
 
 ### Naming Conventions
 
@@ -38,14 +37,6 @@ package email_store // Bad - too long
 package EmailStore  // Bad - mixed case
 ```
 
-#### Interface Naming
-- Interfaces end with `er` suffix when possible
-- Simple, descriptive names
-```go
-type EmailStore interface { ... }  // Good
-type Saver interface { ... }       // Too generic
-type StoreInterface interface { ... } // Redundant
-```
 
 #### Function Names
 ```go
@@ -84,14 +75,6 @@ import (
 )
 ```
 
-#### Import Aliases
-```go
-import (
-    gosmtp "github.com/emersion/go-smtp"  // Avoid conflict
-    "github.com/fn-jakubkarp/coresend/internal/store"
-)
-```
-
 ### Error Handling
 
 #### Standard Error Pattern
@@ -126,32 +109,6 @@ log.Printf("Error saving email for %s: %v", recipient, err)
 // Don't log sensitive data
 log.Printf("Authentication failed for user")  // Good
 log.Printf("Authentication failed for user %s", username)  // Bad
-```
-
-### Constants and Variables
-
-#### Constants
-```go
-const (
-    AddressLength = 16
-    DefaultTTL    = 24 * time.Hour
-    MaxEmails     = 100
-    MaxEmailSize  = 1024 * 1024  // 1MB
-)
-
-// Configuration constants
-const (
-    DefaultRedisAddr = "localhost:6379"
-    DefaultSMTPPort   = ":1025"
-)
-```
-
-#### Variables
-```go
-var (
-    validAddressRegex = regexp.MustCompile(`^[a-f0-9]{16}$`)
-    errInvalidAddress = errors.New("invalid address format")
-)
 ```
 
 ### Struct Definitions
@@ -361,13 +318,6 @@ emails := make([]Email, 0, expectedCount)
 emails = append(emails, newEmail)
 ```
 
-#### Context Usage
-```go
-// Pass context through the call chain
-func (s *Store) SaveEmail(ctx context.Context, inbox string, email Email) error {
-    return s.client.LPush(ctx, key, email).Err()
-}
-```
 
 ## Linting and Tools
 
@@ -449,4 +399,4 @@ repos:
 
 ---
 
-Following these coding standards ensures consistency, maintainability, and quality across the CoreSend codebase. For testing patterns, see [TESTING.md](TESTING.md). For security guidelines, see [SECURITY.md](SECURITY.md).
+Following these coding standards ensures consistency, maintainability, and quality across the CoreSend codebase. For testing patterns, see [TESTING.md](docs/TESTING.md). For security guidelines, see [SECURITY.md](docs/SECURITY.md).

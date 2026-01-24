@@ -184,7 +184,7 @@ docker-compose -f docker-compose.yml up -d
 docker-compose logs caddy
 ```
 
-See [DOCKER_SETUP.md](DOCKER_SETUP.md) for detailed deployment instructions.
+See [docs/DOCKER_SETUP.md](docs/DOCKER_SETUP.md) for detailed deployment instructions.
 
 ## Configuration
 
@@ -224,7 +224,7 @@ This prevents spam to common addresses and ensures only mnemonic-derived address
 
 ## Documentation
 
-- [Docker Setup Guide](DOCKER_SETUP.md) - Deployment and configuration
+- [Docker Setup Guide](docs/DOCKER_SETUP.md) - Deployment and configuration
 - [API Documentation](docs/API.md) - HTTP API reference (planned)
 - [Testing Guide](backend/TESTING.md) - Running tests
 

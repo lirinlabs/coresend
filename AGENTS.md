@@ -22,10 +22,10 @@ CoreSend is a stateless temporary email service built with Go, using BIP39 mnemo
 
 | File | Purpose | Size |
 |------|---------|------|
-| [DEVELOPMENT.md](DEVELOPMENT.md) | Development commands, setup, and workflow | ~100 lines |
-| [CODING_STANDARDS.md](CODING_STANDARDS.md) | Go coding conventions and patterns | ~80 lines |
-| [TESTING.md](TESTING.md) | Test structure, patterns, and requirements | ~120 lines |
-| [SECURITY.md](SECURITY.md) | Security best practices and configuration | ~100 lines |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Development commands, setup, and workflow | ~100 lines |
+| [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md) | Go coding conventions and patterns | ~80 lines |
+| [docs/TESTING.md](docs/TESTING.md) | Test structure, patterns, and requirements | ~120 lines |
+| [docs/SECURITY.md](docs/SECURITY.md) | Security best practices and configuration | ~100 lines |
 
 ## Quick Reference
 
@@ -60,22 +60,22 @@ backend/
 
 ## Getting Started
 
-1. **For development setup**: See [DEVELOPMENT.md](DEVELOPMENT.md)
-2. **For coding patterns**: See [CODING_STANDARDS.md](CODING_STANDARDS.md)
-3. **For testing guidelines**: See [TESTING.md](TESTING.md)
-4. **For security requirements**: See [SECURITY.md](SECURITY.md)
+1. **For development setup**: See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+2. **For coding patterns**: See [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md)
+3. **For testing guidelines**: See [docs/TESTING.md](docs/TESTING.md)
+4. **For security requirements**: See [docs/SECURITY.md](docs/SECURITY.md)
 
 ## Agent Guidelines
 
-- Always follow the coding standards in [CODING_STANDARDS.md](CODING_STANDARDS.md)
-- Write tests according to patterns in [TESTING.md](TESTING.md)
-- Consider security implications as outlined in [SECURITY.md](SECURITY.md)
-- Use the development workflow from [DEVELOPMENT.md](DEVELOPMENT.md)
+- Always follow the coding standards in [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md)
+- Write tests according to patterns in [docs/TESTING.md](docs/TESTING.md)
+- Consider security implications as outlined in [docs/SECURITY.md](docs/SECURITY.md)
+- Use the development workflow from [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
 ## Additional Resources
 
 - [README.md](README.md) - Main project documentation
-- [DOCKER_SETUP.md](DOCKER_SETUP.md) - Docker deployment guide
+- [docs/DOCKER_SETUP.md](docs/DOCKER_SETUP.md) - Docker deployment guide
 - [backend/TESTING.md](backend/TESTING.md) - Detailed testing documentation
 
 ---
