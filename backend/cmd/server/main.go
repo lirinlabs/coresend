@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/tls"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	gosmtp "github.com/emersion/go-smtp"
+	"github.com/fn-jakubkarp/coresend/internal/api"
 	"github.com/fn-jakubkarp/coresend/internal/smtp"
 	"github.com/fn-jakubkarp/coresend/internal/store"
 )
@@ -25,7 +27,8 @@ func main() {
 	redisAddr := getEnv("REDIS_ADDR", "localhost:6379")
 	redisPassword := os.Getenv("REDIS_PASSWORD")
 	domain := getEnv("DOMAIN_NAME", "localhost")
-	listenAddr := getEnv("SMTP_LISTEN_ADDR", ":1025")
+	smtpListenAddr := getEnv("SMTP_LISTEN_ADDR", ":1025")
+	httpListenAddr := getEnv("HTTP_LISTEN_ADDR", ":8080")
 	certPath := os.Getenv("SMTP_CERT_PATH")
 	keyPath := os.Getenv("SMTP_KEY_PATH")
 
@@ -43,13 +46,12 @@ func main() {
 	}
 
 	s := gosmtp.NewServer(be)
-	s.Addr = listenAddr
+	s.Addr = smtpListenAddr
 	s.Domain = domain
 	s.ReadTimeout = 10 * time.Second
 	s.WriteTimeout = 10 * time.Second
 	s.MaxMessageBytes = 1024 * 1024
 	s.MaxRecipients = 50
-	// Inbound-only server: we accept mail from any sender without authentication
 	s.AllowInsecureAuth = true
 
 	if certPath != "" && keyPath != "" {
@@ -67,22 +69,42 @@ func main() {
 		log.Println("TLS certificates not configured, running without STARTTLS")
 	}
 
+	apiRouter := api.NewRouter(emailStore, domain)
+	httpServer := &http.Server{
+		Addr:         httpListenAddr,
+		Handler:      apiRouter,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
 	// Graceful shutdown on SIGINT/SIGTERM
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Println("Shutting down SMTP server...")
+		log.Println("Shutting down servers...")
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer shutdownCancel()
 
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			log.Printf("HTTP server shutdown error: %v", err)
+		}
+
 		if err := s.Shutdown(shutdownCtx); err != nil {
-			log.Printf("Error during shutdown: %v", err)
+			log.Printf("SMTP server shutdown error: %v", err)
 		}
 	}()
 
-	log.Printf("SMTP server starting on %s for domain %s", listenAddr, domain)
+	go func() {
+		log.Printf("HTTP API server starting on %s", httpListenAddr)
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("HTTP server error: %v", err)
+		}
+	}()
+
+	log.Printf("SMTP server starting on %s for domain %s", smtpListenAddr, domain)
 	if err := s.ListenAndServe(); err != nil {
 		log.Fatalf("SMTP server error: %v", err)
 	}

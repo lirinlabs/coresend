@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	gosmtp "github.com/emersion/go-smtp"
 	"github.com/fn-jakubkarp/coresend/internal/store"
@@ -22,6 +23,22 @@ func (m *mockStore) SaveEmail(ctx context.Context, addressBox string, email stor
 
 func (m *mockStore) GetEmails(ctx context.Context, addressBox string) ([]store.Email, error) {
 	return m.savedEmails, nil
+}
+
+func (m *mockStore) GetEmail(ctx context.Context, addressBox string, emailID string) (*store.Email, error) {
+	return nil, nil
+}
+
+func (m *mockStore) DeleteEmail(ctx context.Context, addressBox string, emailID string) error {
+	return nil
+}
+
+func (m *mockStore) ClearInbox(ctx context.Context, addressBox string) (int64, error) {
+	return 0, nil
+}
+
+func (m *mockStore) CheckRateLimit(ctx context.Context, key string, limit int, window time.Duration) (bool, int, error) {
+	return true, limit - 1, nil
 }
 
 func (m *mockStore) Ping(ctx context.Context) error {
