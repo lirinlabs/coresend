@@ -17,26 +17,37 @@ The CoreSend API provides programmatic access to temporary email inboxes. It fol
 
 ### Authentication
 
-The API uses Bearer token authentication for inbox operations. The mnemonic phrase serves as the authentication token:
-
-- **Public endpoints**: Accessible without authentication
-- **Protected endpoints**: Require `Authorization: Bearer <mnemonic>` header
-
-#### Authentication Flow
-
-1. Client sends request with header: `Authorization: Bearer <mnemonic>`
-2. Server validates mnemonic is a valid BIP39 phrase
-3. Server derives address from mnemonic
-4. Server compares derived address with address in request path
-5. If match → request proceeds; if not → 401 Unauthorized
+The API uses zero-knowledge cryptographic authentication for inbox operations.
 
 #### Security Model
 
-The 16-character hex address is public (like a bank account number), but the 12-word mnemonic (128 bits of entropy) remains secret. Only someone with the mnemonic can prove ownership and access the inbox.
+- **Client-side**: User's mnemonic phrase (seed) never leaves their browser
+- **Server-side**: Stateless verification using Ed25519 public key cryptography
+- **No secrets in transit**: Only non-sensitive data travels over network
+
+#### Authentication Flow
+
+1. Client derives Ed25519 keypair from mnemonic using domain-separated HMAC-SHA256
+2. Client signs (address + "|" + timestamp) with private key
+3. Client sends request with authentication headers
+4. Server verifies public key derives to address
+5. Server verifies signature is valid
+6. Server verifies timestamp within 60-second window
+
+#### Auth Headers
+
+Required headers for all `/api/inbox/*` endpoints:
+
+| Header | Description | Example |
+|--------|-------------|----------|
+| `X-Auth-Address` | 16-char hex address | `b4ebe3e2200cbc90` |
+| `X-Auth-Timestamp` | Unix timestamp in milliseconds | `1737705600000` |
+| `X-Auth-Pubkey` | Ed25519 public key (hex) | `3b7a...` (64 chars) |
+| `X-Auth-Signature` | Ed25519 signature (hex) | `9f2c...` (128 chars) |
 
 #### Protected Endpoints
 
-All `/api/inbox/*` endpoints require authentication:
+All `/api/inbox/*` endpoints require authentication headers above:
 - `GET /api/inbox/{address}` - Read inbox
 - `GET /api/inbox/{address}/{emailId}` - Read email
 - `DELETE /api/inbox/{address}/{emailId}` - Delete email
@@ -56,7 +67,7 @@ No authentication required:
 
 #### Generate New Mnemonic
 
-Creates a new 12-word BIP39 mnemonic phrase and derives the corresponding email address.
+Creates a new 12-word BIP39 mnemonic phrase, derives Ed25519 keypair, and generates the corresponding email address.
 
 ```
 POST /api/identity/generate
@@ -69,6 +80,7 @@ POST /api/identity/generate
 {
   "mnemonic": "witch collapse practice feed shame open despair creek road again ice least",
   "address": "b4ebe3e2200cbc90",
+  "public_key": "3b7a... (64 hex chars)",
   "email": "b4ebe3e2200cbc90@coresend.io"
 }
 ```
@@ -81,7 +93,7 @@ POST /api/identity/generate
 
 #### Derive Address from Mnemonic
 
-Derives the email address from an existing mnemonic phrase. Use this for "login" functionality.
+Derives the email address and Ed25519 public key from an existing mnemonic phrase. Use this for "login" functionality.
 
 ```
 POST /api/identity/derive
@@ -98,6 +110,7 @@ POST /api/identity/derive
 ```json
 {
   "address": "b4ebe3e2200cbc90",
+  "public_key": "3b7a... (64 hex chars)",
   "email": "b4ebe3e2200cbc90@coresend.io",
   "valid": true
 }
@@ -328,7 +341,7 @@ All errors follow a consistent format:
 |------|-------------|-------------|
 | `INVALID_ADDRESS` | 400 | Address format is invalid |
 | `INVALID_MNEMONIC` | 400 | Mnemonic phrase is malformed |
-| `UNAUTHORIZED` | 401 | Authorization failed or missing |
+| `UNAUTHORIZED` | 401 | Authentication failed (missing/invalid headers or signature) |
 | `NOT_FOUND` | 404 | Resource not found |
 | `INTERNAL_ERROR` | 500 | Server error |
 | `SERVICE_UNAVAILABLE` | 503 | Dependency unavailable |
@@ -376,13 +389,19 @@ curl -X POST https://coresend.io/api/identity/derive \
   -H "Content-Type: application/json" \
   -d '{"mnemonic": "witch collapse practice feed shame open despair creek road again ice least"}'
 
-# Get inbox (requires authentication)
+# Get inbox (with zero-knowledge auth)
 curl https://coresend.io/api/inbox/b4ebe3e2200cbc90 \
-  -H "Authorization: Bearer witch collapse practice feed shame open despair creek road again ice least"
+  -H "X-Auth-Address: b4ebe3e2200cbc90" \
+  -H "X-Auth-Timestamp: 1737705600000" \
+  -H "X-Auth-Pubkey: 3b7a..." \
+  -H "X-Auth-Signature: 9f2c..."
 
-# Delete email (requires authentication)
+# Delete email (with zero-knowledge auth)
 curl -X DELETE https://coresend.io/api/inbox/b4ebe3e2200cbc90/550e8400-e29b-41d4-a716-446655440000 \
-  -H "Authorization: Bearer witch collapse practice feed shame open despair creek road again ice least"
+  -H "X-Auth-Address: b4ebe3e2200cbc90" \
+  -H "X-Auth-Timestamp: 1737705600000" \
+  -H "X-Auth-Pubkey: 3b7a..." \
+  -H "X-Auth-Signature: 9f2c..."
 ```
 
 ### JavaScript (fetch)

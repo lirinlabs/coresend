@@ -1,63 +1,168 @@
 package api
 
 import (
+	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/fn-jakubkarp/coresend/internal/identity"
+	"golang.org/x/crypto/ed25519"
 )
 
 func TestAuthMiddleware(t *testing.T) {
-	testMnemonic := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-	testAddress := identity.AddressFromMnemonic(testMnemonic)
-	invalidMnemonic := "invalid mnemonic phrase here"
+	testMnemonic := "abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+	privkey, pubkey, _ := identity.DeriveEd25519KeyPair(testMnemonic)
+	testAddress := identity.AddressFromPublicKey(pubkey)
+
+	timestamp := time.Now().UnixMilli()
+	message := identity.CreateMessageToSign(testAddress, timestamp)
+	signature := ed25519.Sign(privkey, []byte(message))
+	timestampStr := strconv.FormatInt(timestamp, 10)
 
 	tests := []struct {
 		name           string
-		authHeader     string
+		authAddress    string
+		authTimestamp  string
+		authPubkey     string
+		authSignature  string
 		path           string
 		expectedStatus int
 	}{
 		{
 			name:           "valid authorization",
-			authHeader:     "Bearer " + testMnemonic,
+			authAddress:    testAddress,
+			authTimestamp:  timestampStr,
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
 			path:           "/api/inbox/" + testAddress,
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:           "no authorization header",
-			authHeader:     "",
+			name:           "missing X-Auth-Address",
+			authAddress:    "",
+			authTimestamp:  timestampStr,
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
 			path:           "/api/inbox/" + testAddress,
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
-			name:           "invalid authorization format",
-			authHeader:     "InvalidFormat " + testMnemonic,
+			name:           "missing X-Auth-Timestamp",
+			authAddress:    testAddress,
+			authTimestamp:  "",
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
 			path:           "/api/inbox/" + testAddress,
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
-			name:           "empty mnemonic",
-			authHeader:     "Bearer ",
+			name:           "missing X-Auth-Pubkey",
+			authAddress:    testAddress,
+			authTimestamp:  timestampStr,
+			authPubkey:     "",
+			authSignature:  hex.EncodeToString(signature),
 			path:           "/api/inbox/" + testAddress,
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
-			name:           "invalid mnemonic",
-			authHeader:     "Bearer " + invalidMnemonic,
+			name:           "missing X-Auth-Signature",
+			authAddress:    testAddress,
+			authTimestamp:  timestampStr,
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  "",
 			path:           "/api/inbox/" + testAddress,
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
-			name:           "wrong address",
-			authHeader:     "Bearer " + testMnemonic,
+			name:           "invalid address format",
+			authAddress:    "invalid",
+			authTimestamp:  timestampStr,
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
+			path:           "/api/inbox/" + testAddress,
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "invalid timestamp format",
+			authAddress:    testAddress,
+			authTimestamp:  "not-a-number",
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
+			path:           "/api/inbox/" + testAddress,
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "expired timestamp",
+			authAddress:    testAddress,
+			authTimestamp:  strconv.FormatInt(time.Now().Add(-2*time.Minute).UnixMilli(), 10),
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
+			path:           "/api/inbox/" + testAddress,
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "future timestamp",
+			authAddress:    testAddress,
+			authTimestamp:  strconv.FormatInt(time.Now().Add(2*time.Minute).UnixMilli(), 10),
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
+			path:           "/api/inbox/" + testAddress,
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "invalid public key format",
+			authAddress:    testAddress,
+			authTimestamp:  timestampStr,
+			authPubkey:     "not-hex",
+			authSignature:  hex.EncodeToString(signature),
+			path:           "/api/inbox/" + testAddress,
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "invalid signature format",
+			authAddress:    testAddress,
+			authTimestamp:  timestampStr,
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  "not-hex",
+			path:           "/api/inbox/" + testAddress,
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "address does not match public key",
+			authAddress:    "0000000000000000",
+			authTimestamp:  timestampStr,
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
+			path:           "/api/inbox/" + testAddress,
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "invalid signature",
+			authAddress:    testAddress,
+			authTimestamp:  timestampStr,
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString([]byte("invalid")),
+			path:           "/api/inbox/" + testAddress,
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "path address mismatch",
+			authAddress:    testAddress,
+			authTimestamp:  timestampStr,
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
 			path:           "/api/inbox/0000000000000000",
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
 			name:           "invalid path",
-			authHeader:     "Bearer " + testMnemonic,
+			authAddress:    testAddress,
+			authTimestamp:  timestampStr,
+			authPubkey:     hex.EncodeToString(pubkey),
+			authSignature:  hex.EncodeToString(signature),
 			path:           "/api/invalid",
 			expectedStatus: http.StatusUnauthorized,
 		},
@@ -73,8 +178,17 @@ func TestAuthMiddleware(t *testing.T) {
 			handler := authMiddleware(nextHandler)
 
 			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
-			if tt.authHeader != "" {
-				req.Header.Set("Authorization", tt.authHeader)
+			if tt.authAddress != "" {
+				req.Header.Set("X-Auth-Address", tt.authAddress)
+			}
+			if tt.authTimestamp != "" {
+				req.Header.Set("X-Auth-Timestamp", tt.authTimestamp)
+			}
+			if tt.authPubkey != "" {
+				req.Header.Set("X-Auth-Pubkey", tt.authPubkey)
+			}
+			if tt.authSignature != "" {
+				req.Header.Set("X-Auth-Signature", tt.authSignature)
 			}
 			w := httptest.NewRecorder()
 

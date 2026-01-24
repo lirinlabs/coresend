@@ -1,9 +1,10 @@
 package api
 
 type GenerateMnemonicResponse struct {
-	Mnemonic string `json:"mnemonic"`
-	Address  string `json:"address"`
-	Email    string `json:"email"`
+	Mnemonic  string `json:"mnemonic"`
+	Address   string `json:"address"`
+	PublicKey string `json:"public_key"`
+	Email     string `json:"email"`
 }
 
 type DeriveAddressRequest struct {
@@ -11,9 +12,10 @@ type DeriveAddressRequest struct {
 }
 
 type DeriveAddressResponse struct {
-	Address string `json:"address"`
-	Email   string `json:"email"`
-	Valid   bool   `json:"valid"`
+	Address   string `json:"address"`
+	Email     string `json:"email"`
+	PublicKey string `json:"public_key,omitempty"`
+	Valid     bool   `json:"valid"`
 }
 
 type ValidateAddressResponse struct {

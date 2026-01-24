@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -35,13 +36,21 @@ func (h *APIHandler) handleGenerateMnemonic(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	address := identity.AddressFromMnemonic(mnemonic)
+	_, pubkey, err := identity.DeriveEd25519KeyPair(mnemonic)
+	if err != nil {
+		log.Printf("Error deriving keypair: %v", err)
+		writeError(w, ErrCodeInternalError, "Failed to derive keys", http.StatusInternalServerError)
+		return
+	}
+
+	address := identity.AddressFromPublicKey(pubkey)
 	email := address + "@" + h.Domain
 
 	resp := GenerateMnemonicResponse{
-		Mnemonic: mnemonic,
-		Address:  address,
-		Email:    email,
+		Mnemonic:  mnemonic,
+		Address:   address,
+		PublicKey: hex.EncodeToString(pubkey),
+		Email:     email,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -60,13 +69,22 @@ func (h *APIHandler) handleDeriveAddress(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	address := identity.AddressFromMnemonic(req.Mnemonic)
+	valid := identity.IsValidBIP39Mnemonic(req.Mnemonic)
+	var pubkey []byte
+	var address string
+
+	if valid {
+		_, pubkey, _ = identity.DeriveEd25519KeyPair(req.Mnemonic)
+		address = identity.AddressFromPublicKey(pubkey)
+	}
+
 	email := address + "@" + h.Domain
 
 	resp := DeriveAddressResponse{
-		Address: address,
-		Email:   email,
-		Valid:   identity.IsValidBIP39Mnemonic(req.Mnemonic),
+		Address:   address,
+		Email:     email,
+		PublicKey: hex.EncodeToString(pubkey),
+		Valid:     valid,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
