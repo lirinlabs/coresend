@@ -30,3 +30,9 @@ func AddressFromMnemonic(mnemonic string) string {
 func IsValidAddress(addr string) bool {
 	return validAddressRegex.MatchString(strings.ToLower(addr))
 }
+
+func IsValidBIP39Mnemonic(mnemonic string) bool {
+	mnemonic = strings.TrimSpace(strings.ToLower(mnemonic))
+	_, err := bip39.EntropyFromMnemonic(mnemonic)
+	return err == nil
+}
