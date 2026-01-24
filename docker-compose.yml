@@ -13,17 +13,19 @@ services:
       retries: 3
 
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "25:1025"
+      - "8080:8080"
     environment:
       - REDIS_ADDR=redis:6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - DOMAIN_NAME=${DOMAIN_NAME}
       - SMTP_LISTEN_ADDR=:1025
+      - HTTP_LISTEN_ADDR=:8080
       # Caddy stores certs in this structure
       - SMTP_CERT_PATH=/certs/${DOMAIN_NAME}/${DOMAIN_NAME}.crt
       - SMTP_KEY_PATH=/certs/${DOMAIN_NAME}/${DOMAIN_NAME}.key
@@ -36,7 +38,7 @@ services:
     networks:
       - coresend-network
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "1025"]
+      test: ["CMD", "sh", "-c", "nc -z localhost 1025 && nc -z localhost 8080"]
       interval: 30s
       timeout: 10s
       retries: 3

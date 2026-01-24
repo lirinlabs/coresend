@@ -36,9 +36,9 @@ RUN chown -R appuser:appgroup /app
 
 USER appuser
 
-EXPOSE 1025
+EXPOSE 1025 8080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD nc -z localhost 1025 || exit 1
+    CMD nc -z localhost 1025 && nc -z localhost 8080 || exit 1
 
 CMD ["./main"]
