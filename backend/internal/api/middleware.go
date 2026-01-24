@@ -3,8 +3,10 @@ package api
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/fn-jakubkarp/coresend/internal/identity"
 	"github.com/fn-jakubkarp/coresend/internal/store"
 )
 
@@ -57,5 +59,57 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		start := time.Now()
 		next.ServeHTTP(w, r)
 		log.Printf("%s %s %s", r.Method, r.URL.Path, time.Since(start))
+	})
+}
+
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			writeError(w, ErrCodeUnauthorized, "Authorization header required", http.StatusUnauthorized)
+			return
+		}
+
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			writeError(w, ErrCodeUnauthorized, "Invalid authorization header format", http.StatusUnauthorized)
+			return
+		}
+
+		mnemonic := strings.TrimPrefix(authHeader, "Bearer ")
+		mnemonic = strings.TrimSpace(mnemonic)
+
+		if mnemonic == "" {
+			writeError(w, ErrCodeUnauthorized, "Mnemonic required", http.StatusUnauthorized)
+			return
+		}
+
+		if !identity.IsValidBIP39Mnemonic(mnemonic) {
+			writeError(w, ErrCodeUnauthorized, "Invalid mnemonic", http.StatusUnauthorized)
+			return
+		}
+
+		derivedAddress := identity.AddressFromMnemonic(mnemonic)
+
+		pathParts := strings.Split(r.URL.Path, "/")
+		var pathAddress string
+		for i, part := range pathParts {
+			if part == "inbox" && i+1 < len(pathParts) {
+				pathAddress = pathParts[i+1]
+				break
+			}
+		}
+
+		if pathAddress == "" {
+			writeError(w, ErrCodeUnauthorized, "Invalid request path", http.StatusUnauthorized)
+			return
+		}
+
+		if derivedAddress != strings.ToLower(pathAddress) {
+			log.Printf("Auth failed: derived=%s, path=%s", derivedAddress, strings.ToLower(pathAddress))
+			writeError(w, ErrCodeUnauthorized, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
 	})
 }

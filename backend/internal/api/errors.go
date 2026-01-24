@@ -10,6 +10,7 @@ const (
 	ErrCodeInternalError      = "INTERNAL_ERROR"
 	ErrCodeServiceUnavailable = "SERVICE_UNAVAILABLE"
 	ErrCodeRateLimitExceeded  = "RATE_LIMIT_EXCEEDED"
+	ErrCodeUnauthorized       = "UNAUTHORIZED"
 )
 
 func writeError(w http.ResponseWriter, code string, message string, httpStatus int) {

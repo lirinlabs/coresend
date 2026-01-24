@@ -2,7 +2,7 @@
 
 ## Status
 
-> **Note**: The HTTP API is not yet implemented. This document describes the planned API design for future implementation.
+> **Note**: The HTTP API is now implemented and operational.
 
 ## Overview
 
@@ -17,12 +17,38 @@ The CoreSend API provides programmatic access to temporary email inboxes. It fol
 
 ### Authentication
 
-The API does not use traditional authentication. Instead, the mnemonic phrase serves as proof of ownership:
+The API uses Bearer token authentication for inbox operations. The mnemonic phrase serves as the authentication token:
 
 - **Public endpoints**: Accessible without authentication
-- **Inbox access**: Requires knowledge of the mnemonic phrase (which derives the address)
+- **Protected endpoints**: Require `Authorization: Bearer <mnemonic>` header
 
-Since anyone who knows the 16-character hex address can access the inbox, the security model relies on the address being unguessable (derived from a 12-word mnemonic = 128 bits of entropy).
+#### Authentication Flow
+
+1. Client sends request with header: `Authorization: Bearer <mnemonic>`
+2. Server validates mnemonic is a valid BIP39 phrase
+3. Server derives address from mnemonic
+4. Server compares derived address with address in request path
+5. If match → request proceeds; if not → 401 Unauthorized
+
+#### Security Model
+
+The 16-character hex address is public (like a bank account number), but the 12-word mnemonic (128 bits of entropy) remains secret. Only someone with the mnemonic can prove ownership and access the inbox.
+
+#### Protected Endpoints
+
+All `/api/inbox/*` endpoints require authentication:
+- `GET /api/inbox/{address}` - Read inbox
+- `GET /api/inbox/{address}/{emailId}` - Read email
+- `DELETE /api/inbox/{address}/{emailId}` - Delete email
+- `DELETE /api/inbox/{address}` - Clear inbox
+
+#### Public Endpoints
+
+No authentication required:
+- `POST /api/identity/generate` - Generate new mnemonic
+- `POST /api/identity/derive` - Derive address from mnemonic
+- `GET /api/identity/validate/{address}` - Validate address format
+- `GET /api/health` - Health check
 
 ## Planned Endpoints
 
@@ -127,6 +153,8 @@ GET /api/inbox/{address}
 
 **Parameters**:
 - `address` (path): 16-character hex address
+- `emailId` (path): UUID of email
+- **Authorization**: `Bearer <mnemonic>` header (required)
 
 **Response**:
 ```json
@@ -232,6 +260,10 @@ Clears all emails from an inbox.
 DELETE /api/inbox/{address}
 ```
 
+**Parameters**:
+- `address` (path): 16-character hex address
+- **Authorization**: `Bearer <mnemonic>` header (required)
+
 **Response**:
 ```json
 {
@@ -296,15 +328,20 @@ All errors follow a consistent format:
 |------|-------------|-------------|
 | `INVALID_ADDRESS` | 400 | Address format is invalid |
 | `INVALID_MNEMONIC` | 400 | Mnemonic phrase is malformed |
+| `UNAUTHORIZED` | 401 | Authorization failed or missing |
 | `NOT_FOUND` | 404 | Resource not found |
 | `INTERNAL_ERROR` | 500 | Server error |
 | `SERVICE_UNAVAILABLE` | 503 | Dependency unavailable |
 
 ## Rate Limiting
 
-> **Note**: Rate limiting is not yet implemented.
+Rate limiting is implemented using Redis:
 
-Planned limits:
+| Endpoint | Limit | Window |
+|----------|-------|--------|
+| `POST /api/identity/generate` | 10 requests | per minute per IP |
+| `GET /api/inbox/*` | 60 requests | per minute per IP |
+| `DELETE /api/inbox/*` | 30 requests | per minute per IP |
 - `POST /api/identity/generate`: 10 requests per minute per IP
 - `GET /api/inbox/*`: 60 requests per minute per IP
 - `DELETE /api/inbox/*`: 30 requests per minute per IP
@@ -339,11 +376,13 @@ curl -X POST https://coresend.io/api/identity/derive \
   -H "Content-Type: application/json" \
   -d '{"mnemonic": "witch collapse practice feed shame open despair creek road again ice least"}'
 
-# Get inbox
-curl https://coresend.io/api/inbox/b4ebe3e2200cbc90
+# Get inbox (requires authentication)
+curl https://coresend.io/api/inbox/b4ebe3e2200cbc90 \
+  -H "Authorization: Bearer witch collapse practice feed shame open despair creek road again ice least"
 
-# Delete email
-curl -X DELETE https://coresend.io/api/inbox/b4ebe3e2200cbc90/550e8400-e29b-41d4-a716-446655440000
+# Delete email (requires authentication)
+curl -X DELETE https://coresend.io/api/inbox/b4ebe3e2200cbc90/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Authorization: Bearer witch collapse practice feed shame open despair creek road again ice least"
 ```
 
 ### JavaScript (fetch)
@@ -380,16 +419,20 @@ for email in inbox.json()['emails']:
 
 | Endpoint | Status |
 |----------|--------|
-| `POST /api/identity/generate` | Planned |
-| `POST /api/identity/derive` | Planned |
-| `GET /api/identity/validate/{address}` | Planned |
-| `GET /api/inbox/{address}` | Planned |
-| `GET /api/inbox/{address}/{emailId}` | Planned |
-| `DELETE /api/inbox/{address}/{emailId}` | Planned |
-| `DELETE /api/inbox/{address}` | Planned |
-| `GET /api/health` | Planned |
+| `POST /api/identity/generate` | Implemented |
+| `POST /api/identity/derive` | Implemented |
+| `GET /api/identity/validate/{address}` | Implemented |
+| `GET /api/inbox/{address}` | Implemented |
+| `GET /api/inbox/{address}/{emailId}` | Implemented |
+| `DELETE /api/inbox/{address}/{emailId}` | Implemented |
+| `DELETE /api/inbox/{address}` | Implemented |
+| `GET /api/health` | Implemented |
 
 ## Changelog
 
-### Unreleased
-- Initial API design documented
+### 1.0.0 (2025-01-24)
+- Implemented complete HTTP API
+- Added Bearer token authentication for inbox operations
+- Implemented rate limiting with Redis
+- Fixed Redis store to use ZSET for per-email TTL
+- Added middleware (auth, CORS, logging, rate limiting)
