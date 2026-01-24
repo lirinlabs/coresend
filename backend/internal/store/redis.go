@@ -22,6 +22,10 @@ type Email struct {
 type EmailStore interface {
 	SaveEmail(ctx context.Context, addressBox string, email Email) error
 	GetEmails(ctx context.Context, addressBox string) ([]Email, error)
+	GetEmail(ctx context.Context, addressBox string, emailID string) (*Email, error)
+	DeleteEmail(ctx context.Context, addressBox string, emailID string) error
+	ClearInbox(ctx context.Context, addressBox string) (int64, error)
+	CheckRateLimit(ctx context.Context, key string, limit int, window time.Duration) (bool, int, error)
 	Ping(ctx context.Context) error
 }
 
@@ -54,11 +58,10 @@ func (s *Store) SaveEmail(ctx context.Context, addressBox string, email Email) e
 
 	key := fmt.Sprintf("inbox:%s", addressBox)
 
-	// TODO: TTL resets for entire inbox on each new email, not per-email.
-	// Consider ZSET with timestamp scores for per-email expiration.
+	now := float64(time.Now().Unix())
 	pipe := s.client.Pipeline()
-	pipe.LPush(ctx, key, data)
-	pipe.LTrim(ctx, key, 0, 99)
+	pipe.ZAdd(ctx, key, redis.Z{Score: now, Member: data})
+	pipe.ZRemRangeByRank(ctx, key, 100, -1)
 	pipe.Expire(ctx, key, 24*time.Hour)
 
 	_, err = pipe.Exec(ctx)
@@ -68,7 +71,7 @@ func (s *Store) SaveEmail(ctx context.Context, addressBox string, email Email) e
 func (s *Store) GetEmails(ctx context.Context, addressBox string) ([]Email, error) {
 	key := fmt.Sprintf("inbox:%s", addressBox)
 
-	data, err := s.client.LRange(ctx, key, 0, -1).Result()
+	data, err := s.client.ZRevRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -83,4 +86,62 @@ func (s *Store) GetEmails(ctx context.Context, addressBox string) ([]Email, erro
 	}
 
 	return emails, nil
+}
+
+func (s *Store) GetEmail(ctx context.Context, addressBox string, emailID string) (*Email, error) {
+	emails, err := s.GetEmails(ctx, addressBox)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, email := range emails {
+		if email.ID == emailID {
+			return &email, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (s *Store) DeleteEmail(ctx context.Context, addressBox string, emailID string) error {
+	key := fmt.Sprintf("inbox:%s", addressBox)
+
+	emails, err := s.GetEmails(ctx, addressBox)
+	if err != nil {
+		return err
+	}
+
+	for _, email := range emails {
+		if email.ID == emailID {
+			data, err := json.Marshal(email)
+			if err != nil {
+				return err
+			}
+			return s.client.ZRem(ctx, key, data).Err()
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) ClearInbox(ctx context.Context, addressBox string) (int64, error) {
+	key := fmt.Sprintf("inbox:%s", addressBox)
+	return s.client.Del(ctx, key).Result()
+}
+
+func (s *Store) CheckRateLimit(ctx context.Context, key string, limit int, window time.Duration) (bool, int, error) {
+	now := time.Now()
+	key = fmt.Sprintf("ratelimit:%s", key)
+
+	pipe := s.client.Pipeline()
+	incr := pipe.Incr(ctx, key)
+	pipe.ExpireAt(ctx, key, now.Add(window))
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return false, 0, err
+	}
+
+	count := int(incr.Val())
+	return count <= limit, limit - count, nil
 }
