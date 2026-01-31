@@ -1,0 +1,111 @@
+import { cva } from "class-variance-authority";
+
+export const typography = cva("antialiased", {
+    variants: {
+        // Text size scale (xs → 9xl)
+        text: {
+            xs: "text-xs leading-tight",
+            sm: "text-sm leading-snug",
+            base: "text-base leading-normal",
+            lg: "text-lg leading-relaxed",
+            xl: "text-xl leading-relaxed",
+            "2xl": "text-2xl leading-tight",
+            "3xl": "text-3xl leading-tight",
+            "4xl": "text-4xl leading-tight",
+            "5xl": "text-5xl leading-none",
+            "6xl": "text-6xl leading-none",
+            "7xl": "text-7xl leading-none",
+            "8xl": "text-8xl leading-none",
+            "9xl": "text-9xl leading-none",
+        },
+        
+        // Common text colors from theme
+        color: {
+            foreground: "text-foreground",
+            muted: "text-muted-foreground",
+            primary: "text-primary",
+            secondary: "text-secondary",
+            accent: "text-accent",
+            destructive: "text-destructive",
+            "primary-foreground": "text-primary-foreground",
+            "secondary-foreground": "text-secondary-foreground",
+            "accent-foreground": "text-accent-foreground",
+        },
+        
+        // Font families
+        font: {
+            sans: "font-sans",
+            mono: "font-mono",
+        },
+        
+        // Font weights
+        weight: {
+            thin: "font-thin",
+            extralight: "font-extralight",
+            light: "font-light",
+            normal: "font-normal",
+            medium: "font-medium",
+            semibold: "font-semibold",
+            bold: "font-bold",
+            extrabold: "font-extrabold",
+            black: "font-black",
+        },
+        
+        // Text alignment
+        align: {
+            left: "text-left",
+            center: "text-center",
+            right: "text-right",
+            justify: "text-justify",
+        },
+        
+        // Text transform
+        transform: {
+            uppercase: "uppercase",
+            lowercase: "lowercase",
+            capitalize: "capitalize",
+            "normal-case": "normal-case",
+        },
+        
+        // Letter spacing
+        tracking: {
+            tighter: "tracking-tighter",
+            tight: "tracking-tight",
+            normal: "tracking-normal",
+            wide: "tracking-wide",
+            wider: "tracking-wider",
+            widest: "tracking-widest",
+        },
+        
+        // Text selection (boolean)
+        select: {
+            false: "select-none",
+            true: "select-text",
+        },
+        
+        // Whitespace control (boolean)
+        nowrap: {
+            true: "whitespace-nowrap",
+        },
+        
+        // Text overflow with ellipsis (boolean)
+        ellipsis: {
+            true: "text-ellipsis overflow-hidden whitespace-nowrap",
+        },
+        
+        // Single-line truncation (boolean)
+        truncate: {
+            true: "truncate",
+        },
+    },
+    defaultVariants: {
+        text: "base",
+        color: "foreground",
+        font: "sans",
+        weight: "normal",
+        align: "left",
+        transform: "normal-case",
+        tracking: "normal",
+        select: false,
+    },
+});
