@@ -2,7 +2,6 @@ import { cva } from "class-variance-authority";
 
 export const typography = cva("antialiased", {
     variants: {
-        // Text size scale (xs → 9xl)
         text: {
             xs: "text-xs leading-tight",
             sm: "text-sm leading-snug",
@@ -18,8 +17,7 @@ export const typography = cva("antialiased", {
             "8xl": "text-8xl leading-none",
             "9xl": "text-9xl leading-none",
         },
-        
-        // Common text colors from theme
+
         color: {
             foreground: "text-foreground",
             muted: "text-muted-foreground",
@@ -31,14 +29,12 @@ export const typography = cva("antialiased", {
             "secondary-foreground": "text-secondary-foreground",
             "accent-foreground": "text-accent-foreground",
         },
-        
-        // Font families
+
         font: {
             sans: "font-sans",
             mono: "font-mono",
         },
-        
-        // Font weights
+
         weight: {
             thin: "font-thin",
             extralight: "font-extralight",
@@ -50,24 +46,21 @@ export const typography = cva("antialiased", {
             extrabold: "font-extrabold",
             black: "font-black",
         },
-        
-        // Text alignment
+
         align: {
             left: "text-left",
             center: "text-center",
             right: "text-right",
             justify: "text-justify",
         },
-        
-        // Text transform
+
         transform: {
             uppercase: "uppercase",
             lowercase: "lowercase",
             capitalize: "capitalize",
             "normal-case": "normal-case",
         },
-        
-        // Letter spacing
+
         tracking: {
             tighter: "tracking-tighter",
             tight: "tracking-tight",
@@ -76,24 +69,20 @@ export const typography = cva("antialiased", {
             wider: "tracking-wider",
             widest: "tracking-widest",
         },
-        
-        // Text selection (boolean)
+
         select: {
             false: "select-none",
             true: "select-text",
         },
-        
-        // Whitespace control (boolean)
+
         nowrap: {
             true: "whitespace-nowrap",
         },
-        
-        // Text overflow with ellipsis (boolean)
+
         ellipsis: {
             true: "text-ellipsis overflow-hidden whitespace-nowrap",
         },
-        
-        // Single-line truncation (boolean)
+
         truncate: {
             true: "truncate",
         },

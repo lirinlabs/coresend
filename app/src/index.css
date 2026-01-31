@@ -122,5 +122,11 @@
   body {
     @apply bg-background text-foreground;
   }
+  :root {
+    max-width: 80rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    margin: 0 auto;
+  }
 }
 
