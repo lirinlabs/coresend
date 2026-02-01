@@ -6,7 +6,7 @@ import Typography from "../Typography/typography";
 export const GatewayHeader = () => {
     const navigate = useNavigate();
     return (
-        <header className="w-full py-2 border-b border-border">
+        <header className="w-full py-4 border-b border-border">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <Button
                     variant="ghost"

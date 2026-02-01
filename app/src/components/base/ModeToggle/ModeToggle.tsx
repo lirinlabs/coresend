@@ -1,5 +1,6 @@
-import { SunIcon, MoonIcon } from "@phosphor-icons/react";
 import { useTheme } from "@/components/theme-provider";
+import BrightnessDownIcon from "@/components/ui/brightness-down-icon";
+import MoonIcon from "@/components/ui/moon-icon";
 
 export function ModeToggle() {
     const { setTheme } = useTheme();
@@ -18,14 +19,8 @@ export function ModeToggle() {
                 aria-label="Toggle theme"
                 className="flex items-center justify-center cursor-pointer"
             >
-                <SunIcon
-                    weight="bold"
-                    className="h-4 w-4 text-muted-foreground hover:text-foreground dark:hidden transition-colors"
-                />
-                <MoonIcon
-                    weight="bold"
-                    className="h-4 w-4 text-muted-foreground hover:text-foreground hidden dark:block transition-colors"
-                />
+                <BrightnessDownIcon className="h-4 w-4 text-muted-foreground hover:text-primary dark:hidden transition-colors" />
+                <MoonIcon className="h-4 w-4 text-muted-foreground hover:text-primary hidden dark:block transition-colors" />
             </button>
         </div>
     );

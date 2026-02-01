@@ -3,38 +3,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * =============================================================================
- * DESIGN SYSTEM COLOR TOKENS
- * =============================================================================
- *
- * This file defines the color system using semantic naming conventions.
- * Colors are defined in :root (light) and .dark (dark mode).
- *
- * NAMING CONVENTION:
- * - `--{name}`: Background/surface color
- * - `--{name}-foreground`: Text color to use ON that background
- *
- * COLOR HIERARCHY:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │ background/foreground     │ Main page background & primary text        │
- * │ card/card-foreground      │ Elevated surfaces (cards, dialogs)         │
- * │ popover/popover-foreground│ Floating elements (dropdowns, tooltips)    │
- * │ primary/primary-foreground│ Brand color (CTAs, links, emphasis)        │
- * │ secondary/secondary-fg    │ Secondary actions, subtle backgrounds      │
- * │ muted/muted-foreground    │ Disabled states, placeholder text          │
- * │ accent/accent-foreground  │ Highlights, hover states                   │
- * │ border                    │ Dividers, input borders                    │
- * │ input                     │ Form input backgrounds                     │
- * │ ring                      │ Focus ring color                           │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * SHADOW SYSTEM (Neobrutalist):
- * - `--shadow-hard`: Default hard shadow (4px offset)
- * - `--shadow-hard-sm`: Small hard shadow (2px offset)
- * - `--shadow-hard-accent`: Accent-colored hard shadow
- */
-
 @theme inline {
     /* Typography */
     --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
