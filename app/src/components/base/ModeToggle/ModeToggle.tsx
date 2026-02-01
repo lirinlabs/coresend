@@ -16,7 +16,7 @@ export function ModeToggle() {
                     setTheme(newTheme);
                 }}
                 aria-label="Toggle theme"
-                className="flex items-center justify-center"
+                className="flex items-center justify-center cursor-pointer"
             >
                 <SunIcon
                     weight="bold"

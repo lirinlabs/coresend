@@ -5,7 +5,7 @@ export const Header = () => {
     return (
         <header className="w-full py-2">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
-                <Logo />
+                <Logo navigate />
                 <ModeToggle />
             </div>
         </header>

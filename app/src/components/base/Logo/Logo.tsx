@@ -1,7 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import Typography from "../Typography/typography";
 
-export const Logo = () => {
-    return (
+interface LogoProps {
+    navigate?: boolean;
+}
+
+export const Logo = ({ navigate }: LogoProps) => {
+    const nav = useNavigate();
+
+    const logoContent = (
         <Typography
             weight="semibold"
             text="sm"
@@ -15,4 +22,18 @@ export const Logo = () => {
             CORESEND
         </Typography>
     );
+
+    if (navigate) {
+        return (
+            <button
+                type="button"
+                onClick={() => nav("/")}
+                className="cursor-pointer"
+            >
+                {logoContent}
+            </button>
+        );
+    }
+
+    return logoContent;
 };

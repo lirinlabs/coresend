@@ -1,5 +1,12 @@
-const Gateway = () => {
-  return <div>Gateway Page</div>
-}
+import { GatewayHeader } from "@/components/base/Header/GatewayHeader";
 
-export default Gateway
+const Gateway = () => {
+    return (
+        <div>
+            <GatewayHeader />
+            Gateway Page
+        </div>
+    );
+};
+
+export default Gateway;
