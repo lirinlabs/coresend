@@ -1,15 +1,11 @@
+import Button from "@/components/base/Button/Button";
 import Typography from "@/components/base/Typography/typography";
 
 const Landing = () => {
     return (
         <div className="w-full h-dvh flex flex-col justify-center items-center gap-4">
-            <h1 className="sr-only">Stateless Inbox</h1>
+            <h1 className="sr-only">Stateless temporary email.</h1>
 
-            <div className="bg-accent">
-                <Typography color="muted" text="xs" font="mono">
-                    Ephemeral • Stateless • Private
-                </Typography>
-            </div>
             <div className="flex flex-col">
                 <Typography weight="extrabold" align="center" text="6xl">
                     Your Inbox.
@@ -17,20 +13,36 @@ const Landing = () => {
                 <Typography weight="extrabold" align="center" text="6xl">
                     Derived from Math.
                 </Typography>
+            </div>
+            <div className="flex flex-col gap-0">
                 <Typography
-                    weight="extrabold"
+                    font="mono"
+                    weight="normal"
                     align="center"
-                    text="6xl"
+                    text="sm"
                     color="muted"
                 >
-                    Not Stored.
+                    Powered by BIP39 deterministic logic.
+                </Typography>
+                <Typography
+                    font="mono"
+                    weight="normal"
+                    align="center"
+                    text="sm"
+                    color="muted"
+                >
+                    24h TTL. No database. Inbound only.{" "}
                 </Typography>
             </div>
-            <Typography weight="normal" align="center" text="lg" color="muted">
-                A temporary email that works like a crypto wallet. No accounts.
-                No passwords. Just a 12-word seed phrase that unlocks your
-                ephemeral inbox.
-            </Typography>
+            <Button
+                variant="primary"
+                size="md"
+                onClick={() => {
+                    window.location.href = "/app";
+                }}
+            >
+                ENTER GATEWAY
+            </Button>
         </div>
     );
 };
