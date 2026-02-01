@@ -18,14 +18,16 @@ const Landing = () => {
                         <Typography
                             weight="extrabold"
                             align="center"
-                            text="6xl"
+                            text="4xl"
+                            textLg="6xl"
                         >
                             Your Inbox.
                         </Typography>
                         <Typography
                             weight="extrabold"
                             align="center"
-                            text="6xl"
+                            text="4xl"
+                            textLg="6xl"
                         >
                             Derived from Math.
                         </Typography>
@@ -35,7 +37,8 @@ const Landing = () => {
                             font="mono"
                             weight="normal"
                             align="center"
-                            text="sm"
+                            text="xs"
+                            textLg="sm"
                             color="muted"
                         >
                             Powered by BIP39 deterministic logic.
@@ -44,7 +47,8 @@ const Landing = () => {
                             font="mono"
                             weight="normal"
                             align="center"
-                            text="sm"
+                            text="xs"
+                            textLg="sm"
                             color="muted"
                         >
                             24h TTL. No database. Inbound only.{" "}

@@ -18,6 +18,22 @@ export const typography = cva("antialiased", {
             "9xl": "text-9xl leading-none",
         },
 
+        textLg: {
+            xs: "lg:text-xs leading-tight",
+            sm: "lg:text-sm leading-snug",
+            base: "lg:text-base leading-normal",
+            lg: "lg:text-lg leading-relaxed",
+            xl: "lg:text-xl leading-relaxed",
+            "2xl": "lg:text-2xl leading-tight",
+            "3xl": "lg:text-3xl leading-tight",
+            "4xl": "lg:text-4xl leading-tight",
+            "5xl": "lg:text-5xl leading-none",
+            "6xl": "lg:text-6xl leading-none",
+            "7xl": "lg:text-7xl leading-none",
+            "8xl": "lg:text-8xl leading-none",
+            "9xl": "lg:text-9xl leading-none",
+        },
+
         color: {
             foreground: "text-foreground",
             muted: "text-muted-foreground",

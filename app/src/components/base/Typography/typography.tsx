@@ -17,6 +17,7 @@ const Typography = React.forwardRef<HTMLElement, TypographyProps>(
             className,
             as: Component = 'p',
             text,
+            textLg,
             color,
             font,
             weight,
@@ -38,6 +39,7 @@ const Typography = React.forwardRef<HTMLElement, TypographyProps>(
                 className: cn(
                     typography({
                         text,
+                        textLg,
                         color,
                         font,
                         weight,

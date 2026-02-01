@@ -12,18 +12,19 @@ export const InboxHeader = () => {
         <header className="w-full py-4 border-b border-border">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <Logo />
-                <div className="flex items-center gap-2 bg-secondary p-1.5 -my-2 pr-2 rounded-xs">
-                    <Typography
-                        color="secondary-foreground"
-                        text="xs"
-                        font="mono"
-                        weight="semibold"
-                    >
-                        4df...432C@coresend.io
-                    </Typography>
-                    <CopyIcon className="text-muted-foreground hover:text-primary transition-colors h-3 w-3" />
-                </div>
+
                 <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 bg-secondary p-1.5 -my-2 pr-2 rounded-xs">
+                        <Typography
+                            color="muted"
+                            text="xs"
+                            font="mono"
+                            weight="semibold"
+                        >
+                            4df...432C@coresend.io
+                        </Typography>
+                        <CopyIcon className="text-muted-foreground hover:text-primary transition-colors h-3 w-3" />
+                    </div>
                     <ModeToggle />
 
                     <ActionIcon
