@@ -28,7 +28,7 @@ export const InboxHeader = () => {
 
                     <ActionIcon
                         icon={
-                            <TrashIcon className="text-muted-foreground hover:text-primary transition-colors h-4 w-4" />
+                            <TrashIcon className="text-muted-foreground hover:text-primary transition-colors h-4 w-4 " />
                         }
                         tooltip="Wipe inbox"
                         title="Wipe Inbox"
