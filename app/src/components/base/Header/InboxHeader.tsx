@@ -35,7 +35,6 @@ export const InboxHeader = () => {
                         description="This will permanently delete all emails in the current inbox."
                         actionText="Wipe All"
                         onAction={() => console.log("Wipe inbox")}
-                        actionVariant="destructive"
                     />
 
                     <ActionIcon
@@ -47,7 +46,6 @@ export const InboxHeader = () => {
                         description="This will permanently delete the entire inbox including the address."
                         actionText="Burn Now"
                         onAction={() => console.log("Burn inbox")}
-                        actionVariant="destructive"
                         iconClassName="text-muted-foreground hover:text-primary transition-colors h-4 w-4"
                     />
 

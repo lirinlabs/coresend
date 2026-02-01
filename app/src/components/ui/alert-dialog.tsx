@@ -2,7 +2,7 @@ import * as React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/base/Button/Button";
 
 function AlertDialog({
     ...props
@@ -149,38 +149,46 @@ function AlertDialogMedia({
 }
 
 function AlertDialogAction({
+    children,
     className,
-    variant = "default",
-    size = "default",
     ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Action> &
-    Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Action>) {
     return (
-        <Button variant={variant} size={size} asChild>
-            <AlertDialogPrimitive.Action
-                data-slot="alert-dialog-action"
-                className={cn(className)}
-                {...props}
-            />
-        </Button>
+        <AlertDialogPrimitive.Action
+            asChild
+            data-slot="alert-dialog-action"
+            {...props}
+        >
+            <Button
+                variant="primary"
+                size="sm"
+                className={cn("mt-4", className)}
+            >
+                {children}
+            </Button>
+        </AlertDialogPrimitive.Action>
     );
 }
 
 function AlertDialogCancel({
+    children,
     className,
-    variant = "outline",
-    size = "default",
     ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel> &
-    Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) {
     return (
-        <Button variant={variant} size={size} asChild>
-            <AlertDialogPrimitive.Cancel
-                data-slot="alert-dialog-cancel"
-                className={cn(className)}
-                {...props}
-            />
-        </Button>
+        <AlertDialogPrimitive.Cancel
+            asChild
+            data-slot="alert-dialog-cancel"
+            {...props}
+        >
+            <Button
+                variant="outline"
+                size="sm"
+                className={cn("mt-4", className)}
+            >
+                {children}
+            </Button>
+        </AlertDialogPrimitive.Cancel>
     );
 }
 

@@ -23,7 +23,6 @@ interface ActionIconProps {
     description: string;
     actionText: string;
     onAction: () => void;
-    actionVariant?: "default" | "destructive";
     iconClassName?: string;
 }
 
@@ -34,17 +33,17 @@ export const ActionIcon = ({
     description,
     actionText,
     onAction,
-    actionVariant = "default",
+    iconClassName = "",
 }: ActionIconProps) => {
     return (
         <AlertDialog>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <button type="button">
-                        <AlertDialogTrigger asChild>
-                            <div>{icon}</div>
-                        </AlertDialogTrigger>
-                    </button>
+                    <AlertDialogTrigger asChild>
+                        <button type="button">
+                            <div className={iconClassName}>{icon}</div>
+                        </button>
+                    </AlertDialogTrigger>
                 </TooltipTrigger>
                 <TooltipContent>{tooltip}</TooltipContent>
             </Tooltip>
@@ -57,14 +56,7 @@ export const ActionIcon = ({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                        onClick={onAction}
-                        className={
-                            actionVariant === "destructive"
-                                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                : ""
-                        }
-                    >
+                    <AlertDialogAction onClick={onAction}>
                         {actionText}
                     </AlertDialogAction>
                 </AlertDialogFooter>
