@@ -76,6 +76,7 @@ export const typography = cva("antialiased", {
         },
 
         nowrap: {
+            false: "whitespace-normal",
             true: "whitespace-nowrap",
         },
 
@@ -94,6 +95,7 @@ export const typography = cva("antialiased", {
         weight: "normal",
         align: "left",
         transform: "normal-case",
+        nowrap: false,
         tracking: "normal",
         select: false,
     },
