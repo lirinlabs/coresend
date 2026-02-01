@@ -9,9 +9,9 @@ import { ActionIcon } from "../ActionIcon";
 
 export const InboxHeader = () => {
     return (
-        <header className="w-full py-4 border-b border-border">
+        <header className="w-full p-4 border-b border-border">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
-                <Logo />
+                <Logo navigate />
 
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 bg-secondary p-1.5 -my-2 pr-2 rounded-xs">

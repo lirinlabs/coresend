@@ -11,18 +11,24 @@ const Gateway = () => {
         <div className="w-full h-dvh flex flex-col">
             <GatewayHeader />
 
-            <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col justify-center items-center">
+            <div className="max-w-7xl mx-auto w-full px-4 flex-1 flex flex-col justify-center items-center">
                 <div className="flex items-center flex-col mb-8">
                     <Typography
                         weight="bold"
                         text="3xl"
                         color="foreground"
+                        align="center"
                         className="text-4xl mb-4"
                         as="h1"
                     >
                         Authenticate Session
                     </Typography>
-                    <Typography text="sm" font="mono" color="muted">
+                    <Typography
+                        text="sm"
+                        font="mono"
+                        color="muted"
+                        align="center"
+                    >
                         Enter your 12-word seed phrase to derive inbox address.
                     </Typography>
                 </div>
@@ -33,10 +39,11 @@ const Gateway = () => {
                     onKeyDownWord={() => {}}
                 />
                 {/* Actions */}
-                <div className="flex gap-4">
+                <div className="flex flex-col md:flex-row gap-4 w-full">
                     <Button
                         variant="primary"
                         size="md"
+                        className="flex-1 w-full"
                         onClick={() => {
                             navigate("/inbox");
                         }}
@@ -46,6 +53,7 @@ const Gateway = () => {
                     <Button
                         variant="secondary"
                         size="md"
+                        className="flex-1 w-full"
                         // TODO: onClick = call api to generate new seed phrase
                     >
                         Generate New Seed
@@ -58,6 +66,7 @@ const Gateway = () => {
                     font="mono"
                     color="muted"
                     className="mt-12"
+                    align="center"
                 >
                     [ NOTICE: Seed phrase is processed client-side only. Never
                     transmitted. ]

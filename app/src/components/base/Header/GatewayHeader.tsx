@@ -1,33 +1,30 @@
 import { useNavigate } from "react-router-dom";
-import Button from "../Button/Button";
 import { ModeToggle } from "../ModeToggle/ModeToggle";
 import Typography from "../Typography/typography";
 
 export const GatewayHeader = () => {
     const navigate = useNavigate();
     return (
-        <header className="w-full py-4 border-b border-border">
+        <header className="w-full p-4 border-b border-border">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:text-primary cursor-pointer"
-                    onClick={() => {
-                        navigate("/");
-                    }}
-                    // leftIcon={<ArrowLeftIcon size={12} weight="regular" />}
+                <button
+                    type="button"
+                    onClick={() => navigate("/")}
+                    className="cursor-pointer"
                 >
                     <Typography
-                        weight="medium"
-                        text="xs"
+                        weight="semibold"
+                        text="sm"
                         tracking="tight"
                         font="mono"
+                        color="foreground"
+                        as="span"
                         transform="uppercase"
-                        className="leading-none"
+                        className="leading-none hover:text-primary cursor-pointer"
                     >
                         ← RETURN_TO_ORIGIN
                     </Typography>
-                </Button>
+                </button>
                 <ModeToggle />
             </div>
         </header>
