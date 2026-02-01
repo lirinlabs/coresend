@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import Button from "../Button/Button";
 import { ModeToggle } from "../ModeToggle/ModeToggle";
 import Typography from "../Typography/typography";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
 
 export const GatewayHeader = () => {
     const navigate = useNavigate();
@@ -16,7 +15,7 @@ export const GatewayHeader = () => {
                     onClick={() => {
                         navigate("/");
                     }}
-                    leftIcon={<ArrowLeftIcon size={12} weight="regular" />}
+                    // leftIcon={<ArrowLeftIcon size={12} weight="regular" />}
                 >
                     <Typography
                         weight="medium"
@@ -26,7 +25,7 @@ export const GatewayHeader = () => {
                         transform="uppercase"
                         className="leading-none"
                     >
-                        RETURN_TO_ORIGIN
+                        ← RETURN_TO_ORIGIN
                     </Typography>
                 </Button>
                 <ModeToggle />
