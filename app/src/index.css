@@ -3,9 +3,44 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * =============================================================================
+ * DESIGN SYSTEM COLOR TOKENS
+ * =============================================================================
+ *
+ * This file defines the color system using semantic naming conventions.
+ * Colors are defined in :root (light) and .dark (dark mode).
+ *
+ * NAMING CONVENTION:
+ * - `--{name}`: Background/surface color
+ * - `--{name}-foreground`: Text color to use ON that background
+ *
+ * COLOR HIERARCHY:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ background/foreground     │ Main page background & primary text        │
+ * │ card/card-foreground      │ Elevated surfaces (cards, dialogs)         │
+ * │ popover/popover-foreground│ Floating elements (dropdowns, tooltips)    │
+ * │ primary/primary-foreground│ Brand color (CTAs, links, emphasis)        │
+ * │ secondary/secondary-fg    │ Secondary actions, subtle backgrounds      │
+ * │ muted/muted-foreground    │ Disabled states, placeholder text          │
+ * │ accent/accent-foreground  │ Highlights, hover states                   │
+ * │ border                    │ Dividers, input borders                    │
+ * │ input                     │ Form input backgrounds                     │
+ * │ ring                      │ Focus ring color                           │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * SHADOW SYSTEM (Neobrutalist):
+ * - `--shadow-hard`: Default hard shadow (4px offset)
+ * - `--shadow-hard-sm`: Small hard shadow (2px offset)
+ * - `--shadow-hard-accent`: Accent-colored hard shadow
+ */
+
 @theme inline {
+    /* Typography */
     --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
     --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+
+    /* Border Radius Scale */
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
@@ -13,9 +48,8 @@
     --radius-2xl: calc(var(--radius) + 8px);
     --radius-3xl: calc(var(--radius) + 12px);
     --radius-4xl: calc(var(--radius) + 16px);
-    --color-border: var(--border);
-    --color-input: var(--input);
-    --color-ring: var(--ring);
+
+    /* Color Mappings (Tailwind v4 syntax) */
     --color-background: var(--background);
     --color-foreground: var(--foreground);
 
@@ -31,73 +65,122 @@
     --color-accent: var(--accent);
     --color-accent-foreground: var(--accent-foreground);
 
-    --color-popover: var(--popover);
-    --color-popover-foreground: var(--popover-foreground);
-
     --color-card: var(--card);
     --color-card-foreground: var(--card-foreground);
 
-    /* Neobrutalist hard shadows */
-    --shadow-hard: 4px 4px 0px 0px #000000;
-    --shadow-hard-sm: 2px 2px 0px 0px #000000;
-    --shadow-hard-accent: 4px 4px 0px 0px hsl(20 100% 50%);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* Shadow Mappings for Tailwind */
+    --shadow-hard: var(--shadow-hard-value);
+    --shadow-hard-sm: var(--shadow-hard-sm-value);
+    --shadow-hard-accent: var(--shadow-hard-accent-value);
 }
 
 :root {
-    /* --- LIGHT THEME --- */
+    /* =================================
+     * LIGHT THEME
+     * ================================= */
+
+    /* Base radius for the scale */
+    --radius: 0.5rem;
+
+    /* Page Background & Text */
     --background: #ffffff;
-    --foreground: #000000; /* Primary Text */
+    --foreground: #121212;
 
-    /* "Card" and "Popover" share the background in minimalism */
+    /* Elevated Surfaces (Cards, Modals) */
     --card: #ffffff;
-    --card-foreground: #000000;
+    --card-foreground: #121212;
+
+    /* Floating Elements (Dropdowns, Tooltips) */
     --popover: #ffffff;
-    --popover-foreground: #000000;
+    --popover-foreground: #121212;
 
-    /* Primary (Your Accent F50) */
-    --primary: #ff5500;
-    --primary-foreground: #ffffff; /* White text on Orange button */
-
-    /* Secondary / Muted (Your Hover & Selected items) */
-    --secondary: #f3f4f6;
-    --secondary-foreground: #000000;
-    --muted: #f3f4f6;
-    --muted-foreground: #8a8a8a; /* Your Secondary Text */
-
-    /* Accent (Used for ghost hover effects in some libraries) */
-    --accent: #f3f4f6;
-    --accent-foreground: #000000;
-
-    /* Borders (Using your hover color or secondary text) */
-    --border: #f3f4f6;
-    --input: #f3f4f6;
-    --ring: #ff5500; /* Focus ring uses your brand color */
-}
-
-.dark {
-    --background: #121212;
-    --foreground: #ffffff;
-
-    --card: #121212;
-    --card-foreground: #ffffff;
-    --popover: #121212;
-    --popover-foreground: #ffffff;
-
+    /* Primary Brand Color (CTAs, Links) */
     --primary: #ff5500;
     --primary-foreground: #ffffff;
 
+    /* Secondary Actions & Surfaces */
+    --secondary: #f5f5f5;
+    --secondary-foreground: #000000;
+
+    /* Muted/Disabled States */
+    --muted: #e5e5e5;
+    --muted-foreground: #737373;
+
+    /* Accent/Highlight (Hover States) */
+    --accent: #fafafa;
+    --accent-foreground: #000000;
+
+    /* Borders & Inputs */
+    --border: #e5e5e5;
+    --input: #f5f5f5;
+
+    /* Focus Ring */
+    --ring: #ff5500;
+
+    /* =================================
+     * NEOBRUTALIST SHADOWS (Light Mode)
+     * ================================= */
+    --shadow-color: #000000;
+    --shadow-hard-value: 4px 4px 0px 0px var(--shadow-color);
+    --shadow-hard-sm-value: 2px 2px 0px 0px var(--shadow-color);
+    --shadow-hard-accent-value: 4px 4px 0px 0px var(--primary);
+}
+
+.dark {
+    /* =================================
+     * DARK THEME
+     * ================================= */
+
+    /* Page Background & Text */
+    --background: #0a0a0a;
+    --foreground: #fafafa;
+
+    /* Elevated Surfaces */
+    --card: #171717;
+    --card-foreground: #fafafa;
+
+    /* Floating Elements */
+    --popover: #171717;
+    --popover-foreground: #fafafa;
+
+    /* Primary Brand Color (stays consistent) */
+    --primary: #ff5500;
+    --primary-foreground: #ffffff;
+
+    /* Secondary Actions & Surfaces */
     --secondary: #262626;
-    --secondary-foreground: #ffffff;
-    --muted: #262626;
-    --muted-foreground: #8a8a8a;
+    --secondary-foreground: #fafafa;
 
+    /* Muted/Disabled States */
+    --muted: #404040;
+    --muted-foreground: #a3a3a3;
+
+    /* Accent/Highlight */
     --accent: #262626;
-    --accent-foreground: #ffffff;
+    --accent-foreground: #fafafa;
 
-    /* Borders */
+    /* Borders & Inputs */
     --border: #262626;
     --input: #262626;
+
+    /* Focus Ring */
     --ring: #ff5500;
+
+    /* =================================
+     * NEOBRUTALIST SHADOWS (Dark Mode)
+     * Uses a subtle light shadow for visibility
+     * ================================= */
+    --shadow-color: rgba(255, 255, 255, 0.15);
+    --shadow-hard-value: 4px 4px 0px 0px var(--shadow-color);
+    --shadow-hard-sm-value: 2px 2px 0px 0px var(--shadow-color);
+    --shadow-hard-accent-value: 4px 4px 0px 0px var(--primary);
 }
 
 @layer base {
@@ -106,12 +189,6 @@
     }
     body {
         @apply bg-background text-foreground;
-    }
-    :root {
-        max-width: 80rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        margin: 0 auto;
     }
 }
 

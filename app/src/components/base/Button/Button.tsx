@@ -1,12 +1,11 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, type ReactNode, type ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
-import Typography from "@/components/base/Typography/typography";
 
 const buttonVariants = cva(
-    // Base styles for all buttons
     [
         "inline-flex items-center justify-center gap-2",
+        "font-semibold uppercase tracking-wide",
         "border border-foreground",
         "transition-all duration-150 ease-out",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
@@ -16,21 +15,21 @@ const buttonVariants = cva(
         variants: {
             variant: {
                 primary: [
-                    "bg-primary text-white",
-                    "shadow-[4px_4px_0px_0px_#000000]",
-                    "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000000]",
+                    "bg-primary text-primary-foreground",
+                    "shadow-hard",
+                    "hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hard-sm",
                     "active:translate-x-[4px] active:translate-y-[4px] active:shadow-none",
                 ],
                 secondary: [
                     "bg-background text-foreground",
-                    "shadow-[4px_4px_0px_0px_#000000]",
-                    "hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-secondary hover:shadow-[2px_2px_0px_0px_#000000]",
+                    "shadow-hard",
+                    "hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-secondary hover:shadow-hard-sm",
                     "active:translate-x-[4px] active:translate-y-[4px] active:shadow-none",
                 ],
                 outline: [
                     "bg-transparent text-foreground",
-                    "shadow-[4px_4px_0px_0px_#000000]",
-                    "hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-accent hover:shadow-[2px_2px_0px_0px_#000000]",
+                    "shadow-hard",
+                    "hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-accent hover:shadow-hard-sm",
                     "active:translate-x-[4px] active:translate-y-[4px] active:shadow-none",
                 ],
                 ghost: [
@@ -41,9 +40,9 @@ const buttonVariants = cva(
                 ],
             },
             size: {
-                sm: "px-4 py-2",
-                md: "px-6 py-3",
-                lg: "px-8 py-4",
+                sm: "px-4 py-2 text-xs",
+                md: "px-6 py-3 text-sm",
+                lg: "px-8 py-4 text-base",
             },
         },
         defaultVariants: {
@@ -52,13 +51,6 @@ const buttonVariants = cva(
         },
     }
 );
-
-// Map button size to typography text size
-const sizeToTextSize = {
-    sm: "xs",
-    md: "sm",
-    lg: "base",
-} as const;
 
 const LoadingSpinner = ({ className }: { className?: string }) => (
     <svg
@@ -140,16 +132,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                         </span>
                     )
                 )}
-                <Typography
-                    as="span"
-                    text={sizeToTextSize[size ?? "md"]}
-                    weight="semibold"
-                    transform="uppercase"
-                    tracking="wide"
-                    color={variant === "primary" ? "primary-foreground" : "foreground"}
-                >
-                    {children}
-                </Typography>
+                {children}
                 {!loading && rightIcon && (
                     <span className={cn("shrink-0", iconSize)}>
                         {rightIcon}

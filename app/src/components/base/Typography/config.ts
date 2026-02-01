@@ -90,7 +90,6 @@ export const typography = cva("antialiased", {
     },
     defaultVariants: {
         text: "base",
-        color: "foreground",
         font: "sans",
         weight: "normal",
         align: "left",
