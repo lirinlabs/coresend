@@ -19,11 +19,11 @@ export function ModeToggle() {
                 className="flex items-center justify-center"
             >
                 <SunIcon
-                    weight="duotone"
+                    weight="bold"
                     className="h-4 w-4 text-muted-foreground hover:text-foreground dark:hidden transition-colors"
                 />
                 <MoonIcon
-                    weight="duotone"
+                    weight="bold"
                     className="h-4 w-4 text-muted-foreground hover:text-foreground hidden dark:block transition-colors"
                 />
             </button>
