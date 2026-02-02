@@ -9,7 +9,7 @@ import { SettingsMenu } from "../SettingsMenu/SettingsMenu";
 
 export const InboxHeader = () => {
     return (
-        <header className="w-full p-4 border-b border-border">
+        <header className="w-full px-3 md:px-6 py-3 border-b border-border">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <Logo navigate />
 
