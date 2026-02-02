@@ -4,6 +4,7 @@ import Gateway from "./pages/Gateway";
 import Inbox from "./pages/Inbox";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./components/theme-provider";
+import Test from "./pages/Test";
 
 const App = () => {
     return (
@@ -13,6 +14,7 @@ const App = () => {
                     <Route path="/" element={<Landing />} />
                     <Route path="/gateway" element={<Gateway />} />
                     <Route path="/inbox" element={<Inbox />} />
+                    <Route path="/test" element={<Test />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </BrowserRouter>

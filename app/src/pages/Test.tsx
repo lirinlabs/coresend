@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
     Copy,
@@ -10,9 +10,8 @@ import {
     AlertTriangle,
     ArrowLeft,
     Menu,
-    X,
 } from "lucide-react";
-import { SettingsDropdown } from "@/components/SettingsDropdown";
+import { SettingsMenu } from "@/components/base/SettingsMenu/SettingsMenu";
 import {
     Tooltip,
     TooltipContent,
@@ -98,12 +97,12 @@ const Inbox = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mobileView, setMobileView] = useState<"list" | "content">("list");
 
-    useEffect(() => {
-        const seed = sessionStorage.getItem("seedPhrase");
-        if (!seed) {
-            navigate("/gateway");
-        }
-    }, [navigate]);
+    // useEffect(() => {
+    //     const seed = sessionStorage.getItem("seedPhrase");
+    //     if (!seed) {
+    //         navigate("/gateway");
+    //     }
+    // }, [navigate]);
 
     const currentAccount = accounts[selectedAccount];
     const emails = currentAccount?.emails || [];
@@ -330,7 +329,7 @@ const Inbox = () => {
                         </AlertDialogContent>
                     </AlertDialog>
 
-                    <SettingsDropdown />
+                    <SettingsMenu />
 
                     <button
                         onClick={handleLogout}
