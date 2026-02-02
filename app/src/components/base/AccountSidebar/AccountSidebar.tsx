@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "motion/react";
 import type { AccountSidebarProps } from "./types";
 import { AccountAvatar } from "./AccountAvatar";
@@ -11,17 +10,15 @@ export const AccountSidebar = ({
     accounts,
     selectedIndex,
     currentAddress,
+    isExpanded,
+    onToggle,
     onSelectAccount,
     onAddAccount,
 }: AccountSidebarProps) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-
     const totalUnread = accounts.reduce(
         (sum, acc) => sum + acc.messageCount,
         0
     );
-
-    const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
     return (
         <motion.aside
@@ -35,7 +32,7 @@ export const AccountSidebar = ({
                 <div className="flex flex-col items-center gap-1 pb-2 border-b border-border mx-2 mb-2">
                     <AccountAvatar
                         address={currentAddress}
-                        onClick={toggleExpanded}
+                        onClick={onToggle}
                         showTooltip={!isExpanded}
                     />
                 </div>
