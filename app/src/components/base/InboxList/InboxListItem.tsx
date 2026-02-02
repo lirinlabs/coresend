@@ -6,7 +6,7 @@ import type { Email } from "./types"
 interface InboxListItemProps {
   email: Email
   isSelected: boolean
-  onSelect: () => void
+  onSelect: (email: Email | null) => void
   onDelete: () => void
 }
 
@@ -21,10 +21,14 @@ export const InboxListItem = ({
     onDelete()
   }
 
+  const handleSelect = () => {
+    onSelect(email)
+  }
+
   return (
     <button
       type="button"
-      onClick={onSelect}
+      onClick={handleSelect}
       className={cn(
         "group w-full text-left px-4 py-3 border-b border-border cursor-pointer transition-colors",
         isSelected

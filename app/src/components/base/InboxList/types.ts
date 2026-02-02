@@ -10,7 +10,7 @@ export interface Email {
 export interface InboxListProps {
   emails: Email[]
   selectedEmailId: string | null
-  onSelectEmail: (email: Email) => void
+  onSelectEmail: (email: Email | null) => void
   onDeleteEmail: (emailId: string) => void
   onToggleSidebar: () => void
 }

@@ -5,6 +5,7 @@ import {
     mockAccounts,
 } from "@/components/base/AccountSidebar";
 import { InboxList, mockEmails, type Email } from "@/components/base/InboxList";
+import { MessagePanel } from "@/components/base/MessagePanel";
 
 const Inbox = () => {
     const [selectedAccount, setSelectedAccount] = useState(0);
@@ -45,6 +46,14 @@ const Inbox = () => {
                     onSelectEmail={setSelectedEmail}
                     onDeleteEmail={handleDeleteEmail}
                     onToggleSidebar={handleToggleSidebar}
+                />
+                <MessagePanel
+                    email={selectedEmail}
+                    onDeleteEmail={() => {
+                        if (selectedEmail) {
+                            handleDeleteEmail(selectedEmail.id);
+                        }
+                    }}
                 />
             </div>
         </div>

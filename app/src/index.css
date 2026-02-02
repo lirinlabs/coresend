@@ -171,3 +171,45 @@
     white-space: nowrap;
     border-width: 0;
 }
+.radar-container {
+    @apply relative w-16 h-16 mb-6;
+}
+
+.radar-sweep {
+    @apply absolute inset-0 rounded-full border border-muted-foreground/30;
+    animation: radar-pulse 2s ease-out infinite;
+}
+
+.radar-sweep:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.radar-sweep:nth-child(3) {
+    animation-delay: 1s;
+}
+
+.radar-dot {
+    @apply absolute top-1/2 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-muted-foreground/50;
+    animation: radar-blink 2s ease-in-out infinite;
+}
+
+@keyframes radar-pulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+@keyframes radar-blink {
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
