@@ -58,6 +58,7 @@ export const InboxHeader = () => {
                         tracking="tight"
                         transform="uppercase"
                         color="muted"
+                        className="cursor-pointer hover:text-primary transition-colors"
                     >
                         LOGOUT
                     </Typography>
