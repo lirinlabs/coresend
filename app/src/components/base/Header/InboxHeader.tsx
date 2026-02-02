@@ -1,11 +1,11 @@
 import TrashIcon from "@/components/ui/trash-icon";
 import { Logo } from "../Logo/Logo";
 import { ModeToggle } from "../ModeToggle/ModeToggle";
-import GearIcon from "@/components/ui/gear-icon";
 import CopyIcon from "@/components/ui/copy-icon";
 import FlameIcon from "@/components/ui/flame-icon";
 import Typography from "../Typography/typography";
 import { ActionIcon } from "../ActionIcon";
+import { SettingsMenu } from "../SettingsMenu/SettingsMenu";
 
 export const InboxHeader = () => {
     return (
@@ -50,7 +50,7 @@ export const InboxHeader = () => {
                         iconClassName="text-muted-foreground hover:text-primary transition-colors h-4 w-4"
                     />
 
-                    <GearIcon className="text-muted-foreground hover:text-primary transition-colors h-4 w-4" />
+                    <SettingsMenu />
 
                     <Typography
                         text="xs"
