@@ -137,7 +137,7 @@ coresend/
 ├── docker-compose.override.yml # Development overrides
 ├── .env.example               # Environment template
 ├── DOCKER_SETUP.md            # Docker deployment guide
-├── LICENSE                    # MIT License
+├── LICENSE                    # AGPLv3 License
 └── README.md                  # This file
 ```
 
@@ -324,30 +324,25 @@ with smtplib.SMTP('localhost', 25) as server:
 - **Spam filtering**: All valid-addressed emails are accepted
 - **Long-term storage**: Emails are deleted after 24 hours
 
-### Production Recommendations
 
-1. **Firewall**: Only expose necessary ports
-   ```bash
-   sudo ufw allow 22/tcp   # SSH (host OS, not Docker)
-   sudo ufw allow 25/tcp   # SMTP
-   sudo ufw allow 80/tcp   # HTTP (redirects to HTTPS)
-   sudo ufw allow 443/tcp  # HTTPS
-   sudo ufw enable
-   ```
-
-2. **Redis**: Set a password in production
-   ```bash
-   REDIS_PASSWORD=your-secure-password
-   ```
-
-3. **Monitoring**: Check logs regularly
-   ```bash
-   docker-compose logs -f
-   ```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Coresend.io
+Copyright (C) 2026 Lirinlabs
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+
 
 ## Acknowledgments
 
