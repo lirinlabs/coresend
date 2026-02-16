@@ -35,7 +35,7 @@ jobs:
       
       - name: Generate Swagger documentation
         working-directory: ./backend
-        run: swag init -g cmd/api/main.go
+        run: swag init -g cmd/server/main.go --parseDependency --parseInternal
       
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1

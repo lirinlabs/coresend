@@ -25,6 +25,14 @@ func NewAPIHandler(s store.EmailStore, domain string) *APIHandler {
 	}
 }
 
+// @Summary Generate new identity
+// @Description Generate a new BIP39 mnemonic phrase and derive an Ed25519 key pair with address
+// @Tags identity
+// @Accept json
+// @Produce json
+// @Success 200 {object} GenerateMnemonicResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/identity/generate [post]
 func (h *APIHandler) handleGenerateMnemonic(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
@@ -59,6 +67,15 @@ func (h *APIHandler) handleGenerateMnemonic(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @Summary Derive address from mnemonic
+// @Description Derive an address and public key from an existing BIP39 mnemonic phrase
+// @Tags identity
+// @Accept json
+// @Produce json
+// @Param request body DeriveAddressRequest true "Mnemonic phrase"
+// @Success 200 {object} DeriveAddressResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /api/identity/derive [post]
 func (h *APIHandler) handleDeriveAddress(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
@@ -93,6 +110,15 @@ func (h *APIHandler) handleDeriveAddress(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @Summary Validate address format
+// @Description Check if an address is valid (16 hexadecimal characters)
+// @Tags identity
+// @Accept json
+// @Produce json
+// @Param address path string true "Address to validate"
+// @Success 200 {object} ValidateAddressResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /api/identity/validate/{address} [get]
 func (h *APIHandler) handleValidateAddress(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
@@ -119,6 +145,17 @@ func (h *APIHandler) handleValidateAddress(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @Summary Get inbox emails
+// @Description Retrieve all emails for a specific address
+// @Tags inbox
+// @Accept json
+// @Produce json
+// @Param address path string true "Address to retrieve emails for"
+// @Success 200 {object} InboxResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security SignatureAuth
+// @Router /api/inbox/{address} [get]
 func (h *APIHandler) handleGetInbox(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
@@ -170,6 +207,19 @@ func (h *APIHandler) handleGetInbox(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @Summary Get single email
+// @Description Retrieve a specific email by ID for an address
+// @Tags inbox
+// @Accept json
+// @Produce json
+// @Param address path string true "Address"
+// @Param emailId path string true "Email ID"
+// @Success 200 {object} EmailResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security SignatureAuth
+// @Router /api/inbox/{address}/{emailId} [get]
 func (h *APIHandler) handleGetEmail(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
@@ -218,6 +268,18 @@ func (h *APIHandler) handleGetEmail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @Summary Delete single email
+// @Description Delete a specific email by ID for an address
+// @Tags inbox
+// @Accept json
+// @Produce json
+// @Param address path string true "Address"
+// @Param emailId path string true "Email ID"
+// @Success 200 {object} DeleteResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security SignatureAuth
+// @Router /api/inbox/{address}/{emailId} [delete]
 func (h *APIHandler) handleDeleteEmail(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
@@ -257,6 +319,16 @@ func (h *APIHandler) handleDeleteEmail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @Summary Clear entire inbox
+// @Description Delete all emails for a specific address
+// @Tags inbox
+// @Accept json
+// @Produce json
+// @Success 200 {object} DeleteResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security SignatureAuth
+// @Router /api/inbox [delete]
 func (h *APIHandler) handleClearInbox(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
