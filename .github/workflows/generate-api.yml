@@ -7,17 +7,24 @@ on:
       - 'backend/**/*.go'
       - 'backend/**/go.mod'
       - 'backend/**/go.sum'
+      - 'backend/Makefile'
+      - 'app/package.json'
+      - 'app/orval.config.ts'
   pull_request:
     paths:
       - 'backend/**/*.go'
       - 'backend/**/go.mod'
       - 'backend/**/go.sum'
+      - 'backend/Makefile'
+      - 'app/package.json'
+      - 'app/orval.config.ts'
 
 jobs:
   generate:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
     
     steps:
       - name: Checkout repository
@@ -28,14 +35,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
-      
-      - name: Install swag
-        run: go install github.com/swaggo/swag/cmd/swag@latest
-      
-      - name: Generate Swagger documentation
-        working-directory: ./backend
-        run: swag init -g cmd/server/main.go --parseDependency --parseInternal
+          go-version-file: backend/go.mod
       
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -44,7 +44,7 @@ jobs:
       
       - name: Install frontend dependencies
         working-directory: ./app
-        run: bun install
+        run: bun install --frozen-lockfile
       
       - name: Generate API types
         working-directory: ./app
@@ -70,7 +70,7 @@ jobs:
           commit_author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
       
       - name: Comment on PR (if changes detected)
-        if: steps.verify-changed-files.outputs.changed == 'true' && github.event_name == 'pull_request'
+        if: steps.verify-changed-files.outputs.changed == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         uses: actions/github-script@v7
         with:
           script: |
