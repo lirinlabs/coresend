@@ -14,7 +14,6 @@ RUN go mod download
 # Copy the source code
 COPY . .
 
-
 # Build the application with optimizations
 # Limits the compiler to work as single-thread (my current machine can't use the command below)
 # RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o main ./cmd/server/main.go
