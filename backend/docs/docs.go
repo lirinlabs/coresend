@@ -30,7 +30,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.HealthResponse"
+                            "$ref": "#/definitions/api.HealthResponse"
                         }
                     }
                 }
@@ -58,19 +58,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.DeleteResponse"
+                            "$ref": "#/definitions/api.DeleteResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     }
                 }
@@ -107,19 +107,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.InboxResponse"
+                            "$ref": "#/definitions/api.InboxResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     }
                 }
@@ -163,25 +163,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.EmailResponse"
+                            "$ref": "#/definitions/api.EmailResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     }
                 }
@@ -223,19 +223,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.DeleteResponse"
+                            "$ref": "#/definitions/api.DeleteResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     }
                 }
@@ -243,7 +243,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_api.DeleteResponse": {
+        "api.DeleteResponse": {
             "type": "object",
             "properties": {
                 "count": {
@@ -257,7 +257,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api.EmailResponse": {
+        "api.EmailResponse": {
             "type": "object",
             "properties": {
                 "body": {
@@ -283,7 +283,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api.ErrorDetails": {
+        "api.ErrorDetails": {
             "type": "object",
             "properties": {
                 "code": {
@@ -298,15 +298,15 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api.ErrorResponse": {
+        "api.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
-                    "$ref": "#/definitions/internal_api.ErrorDetails"
+                    "$ref": "#/definitions/api.ErrorDetails"
                 }
             }
         },
-        "internal_api.HealthResponse": {
+        "api.HealthResponse": {
             "type": "object",
             "properties": {
                 "services": {
@@ -320,7 +320,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api.InboxResponse": {
+        "api.InboxResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -335,7 +335,7 @@ const docTemplate = `{
                 "emails": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internal_api.EmailResponse"
+                        "$ref": "#/definitions/api.EmailResponse"
                     }
                 }
             }

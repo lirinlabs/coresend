@@ -1,0 +1,12 @@
+#!/bin/sh
+echo "🧹 Cleaning and Syncing API Types..."
+
+# Generate Backend Docs
+cd backend && make docs && cd ..
+
+# Generate Frontend Types
+# Since we are using workspaces, 'bun' knows where 'app' is
+cd app && bun run generate-api && cd ..
+
+# Add files to git
+git add app/src/api/generated.ts backend/docs/
