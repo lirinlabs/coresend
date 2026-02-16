@@ -24,7 +24,10 @@ const Gateway = () => {
     const handleGenerateNewSeed = () => {
         const words = mnemonicToWords(generateMnemonic());
         setSeedWords(
-            Array.from({ length: WORD_COUNT }, (_, index) => words[index] ?? ''),
+            Array.from(
+                { length: WORD_COUNT },
+                (_, index) => words[index] ?? '',
+            ),
         );
     };
 

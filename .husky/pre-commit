@@ -1,12 +1,17 @@
-#!/bin/sh
-echo "🧹 Cleaning and Syncing API Types..."
+branch="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+  echo "❌ Error: Cannot commit directly to $branch. Please use a PR."
+  exit 1
+fi
 
-# Generate Backend Docs
-cd backend && make docs && cd ..
+echo "🧹 Running lint-staged..."
+bunx lint-staged || exit 1
 
-# Generate Frontend Types
-# Since we are using workspaces, 'bun' knows where 'app' is
-cd app && bun run generate-api && cd ..
-
-# Add files to git
-git add app/src/api/generated.ts backend/docs/
+# Sync API if backend or orval config changed
+if git diff --cached --name-only | grep -E "backend/|orval.config.js" > /dev/null; then
+  echo "🔄 Backend changes detected. Syncing API Types..."
+  make -C backend swagger || exit 1
+  bun run --filter frontend generate-api || exit 1
+  
+  git add app/src/api/generated.ts backend/docs/
+fi
