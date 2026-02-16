@@ -3,11 +3,7 @@
 # Generate Swagger documentation
 swagger:
 	@echo "Generating Swagger documentation..."
-	@if command -v swag >/dev/null 2>&1; then \
-		swag init -g cmd/server/main.go --parseDependency --parseInternal; \
-	else \
-		go run github.com/swaggo/swag/cmd/swag@v1.16.4 init -g cmd/server/main.go --parseDependency --parseInternal; \
-	fi
+	@go run -mod=mod github.com/swaggo/swag/cmd/swag@v1.16.4 init -g cmd/server/main.go --parseDependency --parseInternal
 	@echo "✓ Swagger docs generated in docs/"
 
 # Build the server binary
@@ -43,7 +39,7 @@ deps:
 
 # Install swag CLI tool
 install-swag:
-	@go install github.com/swaggo/swag/cmd/swag@latest
+	@go install github.com/swaggo/swag/cmd/swag@v1.16.4
 	@echo "✓ swag installed"
 
 # Format code
