@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/fn-jakubkarp/coresend/internal/store"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func NewRouter(s store.EmailStore, domain string) http.Handler {
@@ -35,6 +36,7 @@ func NewRouter(s store.EmailStore, domain string) http.Handler {
 	mux.HandleFunc("/api/inbox/", wrap(handler.handleGetInbox, loggingMiddleware, corsMiddleware, rateLimitMiddleware(s, inboxRateLimit), authMiddleware))
 	mux.HandleFunc("/api/inbox", wrap(handler.handleClearInbox, loggingMiddleware, corsMiddleware, rateLimitMiddleware(s, deleteRateLimit), authMiddleware))
 	mux.HandleFunc("/api/health", wrap(handler.handleHealth, loggingMiddleware, corsMiddleware))
+	mux.HandleFunc("/docs/", httpSwagger.WrapHandler)
 
 	return mux
 }

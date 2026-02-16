@@ -1,0 +1,339 @@
+basePath: /
+definitions:
+  internal_api.DeleteResponse:
+    properties:
+      count:
+        type: integer
+      deleted:
+        type: boolean
+      id:
+        type: string
+    type: object
+  internal_api.DeriveAddressRequest:
+    properties:
+      mnemonic:
+        type: string
+    type: object
+  internal_api.DeriveAddressResponse:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      public_key:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  internal_api.EmailResponse:
+    properties:
+      body:
+        type: string
+      from:
+        type: string
+      id:
+        type: string
+      received_at:
+        type: string
+      subject:
+        type: string
+      to:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_api.ErrorDetails:
+    properties:
+      code:
+        type: string
+      details:
+        additionalProperties: true
+        type: object
+      message:
+        type: string
+    type: object
+  internal_api.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/internal_api.ErrorDetails'
+    type: object
+  internal_api.GenerateMnemonicResponse:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      mnemonic:
+        type: string
+      public_key:
+        type: string
+    type: object
+  internal_api.HealthResponse:
+    properties:
+      services:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        type: string
+    type: object
+  internal_api.InboxResponse:
+    properties:
+      address:
+        type: string
+      count:
+        type: integer
+      email:
+        type: string
+      emails:
+        items:
+          $ref: '#/definitions/internal_api.EmailResponse'
+        type: array
+    type: object
+  internal_api.ValidateAddressResponse:
+    properties:
+      address:
+        type: string
+      reason:
+        type: string
+      valid:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@coresend.io
+    name: API Support
+  description: Temporary email service with identity-based authentication using BIP39
+    mnemonics
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: CoreSend API
+  version: "1.0"
+paths:
+  /api/health:
+    get:
+      description: Check API and services health status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+  /api/identity/derive:
+    post:
+      consumes:
+      - application/json
+      description: Derive an address and public key from an existing BIP39 mnemonic
+        phrase
+      parameters:
+      - description: Mnemonic phrase
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api.DeriveAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api.DeriveAddressResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      summary: Derive address from mnemonic
+      tags:
+      - identity
+  /api/identity/generate:
+    post:
+      consumes:
+      - application/json
+      description: Generate a new BIP39 mnemonic phrase and derive an Ed25519 key
+        pair with address
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api.GenerateMnemonicResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      summary: Generate new identity
+      tags:
+      - identity
+  /api/identity/validate/{address}:
+    get:
+      consumes:
+      - application/json
+      description: Check if an address is valid (16 hexadecimal characters)
+      parameters:
+      - description: Address to validate
+        in: path
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api.ValidateAddressResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      summary: Validate address format
+      tags:
+      - identity
+  /api/inbox:
+    delete:
+      consumes:
+      - application/json
+      description: Delete all emails for a specific address
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api.DeleteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - SignatureAuth: []
+      summary: Clear entire inbox
+      tags:
+      - inbox
+  /api/inbox/{address}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all emails for a specific address
+      parameters:
+      - description: Address to retrieve emails for
+        in: path
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api.InboxResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - SignatureAuth: []
+      summary: Get inbox emails
+      tags:
+      - inbox
+  /api/inbox/{address}/{emailId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a specific email by ID for an address
+      parameters:
+      - description: Address
+        in: path
+        name: address
+        required: true
+        type: string
+      - description: Email ID
+        in: path
+        name: emailId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api.DeleteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - SignatureAuth: []
+      summary: Delete single email
+      tags:
+      - inbox
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific email by ID for an address
+      parameters:
+      - description: Address
+        in: path
+        name: address
+        required: true
+        type: string
+      - description: Email ID
+        in: path
+        name: emailId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api.EmailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - SignatureAuth: []
+      summary: Get single email
+      tags:
+      - inbox
+securityDefinitions:
+  SignatureAuth:
+    description: Ed25519 signature of the request body using the private key derived
+      from the mnemonic
+    in: header
+    name: X-Signature
+    type: apiKey
+swagger: "2.0"
