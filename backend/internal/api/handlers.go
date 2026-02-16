@@ -9,6 +9,8 @@ import (
 
 	"github.com/fn-jakubkarp/coresend/internal/identity"
 	"github.com/fn-jakubkarp/coresend/internal/store"
+
+	_ "github.com/fn-jakubkarp/coresend/docs"
 )
 
 type APIHandler struct {
@@ -292,6 +294,12 @@ func (h *APIHandler) handleClearInbox(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @Summary Health check
+// @Description Check API and services health status
+// @Tags health
+// @Produce json
+// @Success 200 {object} HealthResponse
+// @Router /api/health [get]
 func (h *APIHandler) handleHealth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)

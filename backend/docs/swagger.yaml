@@ -1,0 +1,36 @@
+openapi: 3.0.0
+info:
+  title: Coresend API
+  description: Ephemeral, temporary email service API
+  version: "1.0"
+
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      description: Check API and services health status
+      tags:
+        - health
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "connected"
+        services:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            redis: "connected"
+            smtp: "running"

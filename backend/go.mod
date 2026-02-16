@@ -7,6 +7,7 @@ require (
 	github.com/emersion/go-smtp v0.24.0
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.17.2
+	github.com/swaggo/http-swagger v1.3.4
 	github.com/tyler-smith/go-bip39 v1.1.0
 	golang.org/x/crypto v0.47.0
 )
