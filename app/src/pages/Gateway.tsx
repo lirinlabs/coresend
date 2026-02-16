@@ -1,11 +1,32 @@
+import { useState } from 'react';
 import Button from '@/components/base/Button/Button';
 import { GatewayHeader } from '@/components/base/Header/GatewayHeader';
 import { SeedBox } from '@/components/base/Seeds/SeedBox';
 import Typography from '@/components/base/Typography/typography';
+import { generateMnemonic, mnemonicToWords } from '@/lib/identity';
 import { useNavigate } from 'react-router-dom';
+
+const WORD_COUNT = 12;
+const EMPTY_SEED_WORDS = new Array(WORD_COUNT).fill('');
 
 const Gateway = () => {
     const navigate = useNavigate();
+    const [seedWords, setSeedWords] = useState<string[]>(EMPTY_SEED_WORDS);
+
+    const updateWordAtIndex = (index: number, value: string) => {
+        setSeedWords((prev) => {
+            const next = [...prev];
+            next[index] = value;
+            return next;
+        });
+    };
+
+    const handleGenerateNewSeed = () => {
+        const words = mnemonicToWords(generateMnemonic());
+        setSeedWords(
+            Array.from({ length: WORD_COUNT }, (_, index) => words[index] ?? ''),
+        );
+    };
 
     return (
         <div className='w-full h-dvh flex flex-col'>
@@ -34,8 +55,8 @@ const Gateway = () => {
                 </div>
                 {/* Seeds */}
                 <SeedBox
-                    seedWords={new Array(12).fill('')}
-                    onChangeWord={() => {}}
+                    seedWords={seedWords}
+                    onChangeWord={updateWordAtIndex}
                     onKeyDownWord={() => {}}
                 />
                 {/* Actions */}
@@ -54,7 +75,7 @@ const Gateway = () => {
                         variant='secondary'
                         size='md'
                         className='flex-1 w-full'
-                        // TODO: onClick = call api to generate new seed phrase
+                        onClick={handleGenerateNewSeed}
                     >
                         Generate New Seed
                     </Button>

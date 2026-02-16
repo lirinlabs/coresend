@@ -8,7 +8,7 @@
         "build": "tsc -b && vite build",
         "lint": "eslint .",
         "preview": "vite preview",
-        "generate-api": "orval",
+        "generate-api": "cd ../backend && make swagger && cd ../app && orval",
         "format": "prettier --write ."
     },
     "dependencies": {
@@ -21,6 +21,7 @@
         "@radix-ui/react-tooltip": "^1.2.8",
         "@tailwindcss/vite": "^4.1.18",
         "@tanstack/react-query": "^5.90.21",
+        "bip39": "^3.1.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "gsap": "^3.13.0",
