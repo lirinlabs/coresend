@@ -3,7 +3,7 @@
 # Generate Swagger documentation
 swagger:
 	@echo "Generating Swagger documentation..."
-	@go run -mod=mod github.com/swaggo/swag/cmd/swag@v1.16.4 init -g cmd/server/main.go --parseDependency --parseInternal
+	@go run -mod=mod github.com/swaggo/swag/cmd/swag@v1.16.4 init -g main.go -d cmd/server,internal/api --parseInternal --parseGoList=false
 	@echo "✓ Swagger docs generated in docs/"
 
 # Build the server binary
