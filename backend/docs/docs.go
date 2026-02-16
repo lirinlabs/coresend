@@ -10,14 +10,7 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support",
-            "email": "support@coresend.io"
-        },
-        "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -37,114 +30,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.HealthResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/identity/derive": {
-            "post": {
-                "description": "Derive an address and public key from an existing BIP39 mnemonic phrase",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "identity"
-                ],
-                "summary": "Derive address from mnemonic",
-                "parameters": [
-                    {
-                        "description": "Mnemonic phrase",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_api.DeriveAddressRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_api.DeriveAddressResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/identity/generate": {
-            "post": {
-                "description": "Generate a new BIP39 mnemonic phrase and derive an Ed25519 key pair with address",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "identity"
-                ],
-                "summary": "Generate new identity",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_api.GenerateMnemonicResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/identity/validate/{address}": {
-            "get": {
-                "description": "Check if an address is valid (16 hexadecimal characters)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "identity"
-                ],
-                "summary": "Validate address format",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Address to validate",
-                        "name": "address",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_api.ValidateAddressResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.HealthResponse"
                         }
                     }
                 }
@@ -172,19 +58,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.DeleteResponse"
+                            "$ref": "#/definitions/api.DeleteResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     }
                 }
@@ -221,19 +107,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.InboxResponse"
+                            "$ref": "#/definitions/api.InboxResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     }
                 }
@@ -277,25 +163,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.EmailResponse"
+                            "$ref": "#/definitions/api.EmailResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     }
                 }
@@ -337,19 +223,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.DeleteResponse"
+                            "$ref": "#/definitions/api.DeleteResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorResponse"
                         }
                     }
                 }
@@ -357,7 +243,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_api.DeleteResponse": {
+        "api.DeleteResponse": {
             "type": "object",
             "properties": {
                 "count": {
@@ -371,32 +257,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api.DeriveAddressRequest": {
-            "type": "object",
-            "properties": {
-                "mnemonic": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_api.DeriveAddressResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "public_key": {
-                    "type": "string"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "internal_api.EmailResponse": {
+        "api.EmailResponse": {
             "type": "object",
             "properties": {
                 "body": {
@@ -422,7 +283,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api.ErrorDetails": {
+        "api.ErrorDetails": {
             "type": "object",
             "properties": {
                 "code": {
@@ -437,32 +298,15 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api.ErrorResponse": {
+        "api.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
-                    "$ref": "#/definitions/internal_api.ErrorDetails"
+                    "$ref": "#/definitions/api.ErrorDetails"
                 }
             }
         },
-        "internal_api.GenerateMnemonicResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "mnemonic": {
-                    "type": "string"
-                },
-                "public_key": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_api.HealthResponse": {
+        "api.HealthResponse": {
             "type": "object",
             "properties": {
                 "services": {
@@ -476,7 +320,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api.InboxResponse": {
+        "api.InboxResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -491,39 +335,17 @@ const docTemplate = `{
                 "emails": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internal_api.EmailResponse"
+                        "$ref": "#/definitions/api.EmailResponse"
                     }
                 }
             }
-        },
-        "internal_api.ValidateAddressResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "reason": {
-                    "type": "string"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
-        }
-    },
-    "securityDefinitions": {
-        "SignatureAuth": {
-            "description": "Ed25519 signature of the request body using the private key derived from the mnemonic",
-            "type": "apiKey",
-            "name": "X-Signature",
-            "in": "header"
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "1.1",
 	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
@@ -531,6 +353,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Temporary email service with identity-based authentication using BIP39 mnemonics",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

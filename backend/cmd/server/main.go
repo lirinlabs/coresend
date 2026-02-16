@@ -1,23 +1,12 @@
 package main
 
 // @title CoreSend API
-// @version 1.0
+// @version 1.1
 // @description Temporary email service with identity-based authentication using BIP39 mnemonics
 // @termsOfService http://swagger.io/terms/
 
-// @contact.name API Support
-// @contact.email support@coresend.io
-
-// @license.name MIT
-// @license.url https://opensource.org/licenses/MIT
-
 // @host localhost:8080
 // @BasePath /
-
-// @securityDefinitions.apikey SignatureAuth
-// @in header
-// @name X-Signature
-// @description Ed25519 signature of the request body using the private key derived from the mnemonic
 
 import (
 	"context"

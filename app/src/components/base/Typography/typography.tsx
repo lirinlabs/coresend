@@ -1,14 +1,25 @@
-import { typography } from './config'
-import type { VariantProps } from 'class-variance-authority'
-import { cn } from '@/lib/utils'
-import React from 'react'
+import { typography } from './config';
+import type { VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+import React from 'react';
 
-type ElementType = 'p' | 'span' | 'div' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'label'
+type ElementType =
+    | 'p'
+    | 'span'
+    | 'div'
+    | 'h1'
+    | 'h2'
+    | 'h3'
+    | 'h4'
+    | 'h5'
+    | 'h6'
+    | 'label';
 
 export interface TypographyProps
-    extends Omit<React.HTMLAttributes<HTMLElement>, 'color'>,
+    extends
+        Omit<React.HTMLAttributes<HTMLElement>, 'color'>,
         VariantProps<typeof typography> {
-    as?: ElementType
+    as?: ElementType;
 }
 
 const Typography = React.forwardRef<HTMLElement, TypographyProps>(
@@ -30,7 +41,7 @@ const Typography = React.forwardRef<HTMLElement, TypographyProps>(
             truncate,
             ...props
         },
-        ref
+        ref,
     ) => {
         return React.createElement(
             Component,
@@ -51,15 +62,15 @@ const Typography = React.forwardRef<HTMLElement, TypographyProps>(
                         ellipsis,
                         truncate,
                     }),
-                    className
+                    className,
                 ),
                 ...props,
             },
-            props.children
-        )
-    }
-)
+            props.children,
+        );
+    },
+);
 
-Typography.displayName = 'Typography'
+Typography.displayName = 'Typography';
 
-export default Typography
+export default Typography;

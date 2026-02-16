@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -23,126 +22,6 @@ func NewAPIHandler(s store.EmailStore, domain string) *APIHandler {
 		Store:  s,
 		Domain: domain,
 	}
-}
-
-// @Summary Generate new identity
-// @Description Generate a new BIP39 mnemonic phrase and derive an Ed25519 key pair with address
-// @Tags identity
-// @Accept json
-// @Produce json
-// @Success 200 {object} GenerateMnemonicResponse
-// @Failure 500 {object} ErrorResponse
-// @Router /api/identity/generate [post]
-func (h *APIHandler) handleGenerateMnemonic(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	mnemonic, err := identity.GenerateNewMnemonic()
-	if err != nil {
-		log.Printf("Error generating mnemonic: %v", err)
-		writeError(w, ErrCodeInternalError, "Failed to generate mnemonic", http.StatusInternalServerError)
-		return
-	}
-
-	_, pubkey, err := identity.DeriveEd25519KeyPair(mnemonic)
-	if err != nil {
-		log.Printf("Error deriving keypair: %v", err)
-		writeError(w, ErrCodeInternalError, "Failed to derive keys", http.StatusInternalServerError)
-		return
-	}
-
-	address := identity.AddressFromPublicKey(pubkey)
-	email := address + "@" + h.Domain
-
-	resp := GenerateMnemonicResponse{
-		Mnemonic:  mnemonic,
-		Address:   address,
-		PublicKey: hex.EncodeToString(pubkey),
-		Email:     email,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
-}
-
-// @Summary Derive address from mnemonic
-// @Description Derive an address and public key from an existing BIP39 mnemonic phrase
-// @Tags identity
-// @Accept json
-// @Produce json
-// @Param request body DeriveAddressRequest true "Mnemonic phrase"
-// @Success 200 {object} DeriveAddressResponse
-// @Failure 400 {object} ErrorResponse
-// @Router /api/identity/derive [post]
-func (h *APIHandler) handleDeriveAddress(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	var req DeriveAddressRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, ErrCodeInvalidMnemonic, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	valid := identity.IsValidBIP39Mnemonic(req.Mnemonic)
-	var pubkey []byte
-	var address string
-
-	if valid {
-		_, pubkey, _ = identity.DeriveEd25519KeyPair(req.Mnemonic)
-		address = identity.AddressFromPublicKey(pubkey)
-	}
-
-	email := address + "@" + h.Domain
-
-	resp := DeriveAddressResponse{
-		Address:   address,
-		Email:     email,
-		PublicKey: hex.EncodeToString(pubkey),
-		Valid:     valid,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
-}
-
-// @Summary Validate address format
-// @Description Check if an address is valid (16 hexadecimal characters)
-// @Tags identity
-// @Accept json
-// @Produce json
-// @Param address path string true "Address to validate"
-// @Success 200 {object} ValidateAddressResponse
-// @Failure 400 {object} ErrorResponse
-// @Router /api/identity/validate/{address} [get]
-func (h *APIHandler) handleValidateAddress(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/identity/validate/"), "/")
-	if len(parts) == 0 || parts[0] == "" {
-		writeError(w, ErrCodeInvalidAddress, "Address is required", http.StatusBadRequest)
-		return
-	}
-
-	address := parts[0]
-	resp := ValidateAddressResponse{
-		Address: address,
-		Valid:   identity.IsValidAddress(address),
-	}
-
-	if !resp.Valid {
-		resp.Reason = "Address must be exactly 16 hexadecimal characters"
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
 }
 
 // @Summary Get inbox emails

@@ -1,0 +1,32 @@
+{
+  "name": "coresend-monorepo",
+  "private": true,
+  "workspaces": [
+    "app"
+  ],
+  "scripts": {
+    "prepare": "husky",
+    "lint-staged": "lint-staged",
+    "app:dev": "bun --filter frontend dev",
+    "app:build": "bun --filter frontend build",
+    "gen": "make -C backend swagger && bun run --filter frontend generate-api"
+  },
+  "lint-staged": {
+    "app/**/*.{ts,tsx,js,jsx,json,css}": [
+      "bun run --filter frontend format"
+    ],
+    "backend/**/*.go": [
+      "gofmt -s -w"
+    ],
+    "*.{json,md}": [
+      "bunx prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
+    "husky": "^9.0.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.0.0"
+  }
+}

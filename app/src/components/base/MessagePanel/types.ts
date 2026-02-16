@@ -1,6 +1,6 @@
-import type { Email } from "../InboxList/types"
+import type { Email } from '../InboxList/types';
 
 export interface MessagePanelProps {
-  email: Email | null
-  onDeleteEmail: () => void
+    email: Email | null;
+    onDeleteEmail: () => void;
 }

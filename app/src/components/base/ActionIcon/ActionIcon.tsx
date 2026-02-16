@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -9,12 +9,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
 
 interface ActionIconProps {
     icon: ReactNode;
@@ -33,14 +33,14 @@ export const ActionIcon = ({
     description,
     actionText,
     onAction,
-    iconClassName = "",
+    iconClassName = '',
 }: ActionIconProps) => {
     return (
         <AlertDialog>
             <Tooltip>
                 <TooltipTrigger asChild>
                     <AlertDialogTrigger asChild>
-                        <button type="button">
+                        <button type='button'>
                             <div className={iconClassName}>{icon}</div>
                         </button>
                     </AlertDialogTrigger>

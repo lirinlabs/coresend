@@ -1,0 +1,17 @@
+branch="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+  echo "❌ Error: Cannot commit directly to $branch. Please use a PR."
+  exit 1
+fi
+
+echo "🧹 Running lint-staged..."
+bunx lint-staged || exit 1
+
+# Sync API if backend or orval config changed
+if git diff --cached --name-only | grep -E "backend/|orval.config.js" > /dev/null; then
+  echo "🔄 Backend changes detected. Syncing API Types..."
+  make -C backend swagger || exit 1
+  bun run --filter frontend generate-api || exit 1
+  
+  git add app/src/api/generated.ts backend/docs/
+fi

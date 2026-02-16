@@ -3,95 +3,67 @@
  * Do not edit manually.
  * CoreSend API
  * Temporary email service with identity-based authentication using BIP39 mnemonics
- * OpenAPI spec version: 1.0
+ * OpenAPI spec version: 1.1
  */
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseInfiniteQueryResult,
-  DefinedUseQueryResult,
-  InfiniteData,
-  MutationFunction,
-  QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
-  UseInfiniteQueryOptions,
-  UseInfiniteQueryResult,
-  UseMutationOptions,
-  UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult
+    DataTag,
+    DefinedInitialDataOptions,
+    DefinedUseInfiniteQueryResult,
+    DefinedUseQueryResult,
+    InfiniteData,
+    MutationFunction,
+    QueryClient,
+    QueryFunction,
+    QueryKey,
+    UndefinedInitialDataOptions,
+    UseInfiniteQueryOptions,
+    UseInfiniteQueryResult,
+    UseMutationOptions,
+    UseMutationResult,
+    UseQueryOptions,
+    UseQueryResult,
 } from '@tanstack/react-query';
 
-export interface InternalApiDeleteResponse {
-  count?: number;
-  deleted?: boolean;
-  id?: string;
+export interface ApiDeleteResponse {
+    count?: number;
+    deleted?: boolean;
+    id?: string;
 }
 
-export interface InternalApiDeriveAddressRequest {
-  mnemonic?: string;
+export interface ApiEmailResponse {
+    body?: string;
+    from?: string;
+    id?: string;
+    received_at?: string;
+    subject?: string;
+    to?: string[];
 }
 
-export interface InternalApiDeriveAddressResponse {
-  address?: string;
-  email?: string;
-  public_key?: string;
-  valid?: boolean;
+export type ApiErrorDetailsDetails = { [key: string]: unknown };
+
+export interface ApiErrorDetails {
+    code?: string;
+    details?: ApiErrorDetailsDetails;
+    message?: string;
 }
 
-export interface InternalApiEmailResponse {
-  body?: string;
-  from?: string;
-  id?: string;
-  received_at?: string;
-  subject?: string;
-  to?: string[];
+export interface ApiErrorResponse {
+    error?: ApiErrorDetails;
 }
 
-export type InternalApiErrorDetailsDetails = { [key: string]: unknown };
+export type ApiHealthResponseServices = { [key: string]: string };
 
-export interface InternalApiErrorDetails {
-  code?: string;
-  details?: InternalApiErrorDetailsDetails;
-  message?: string;
+export interface ApiHealthResponse {
+    services?: ApiHealthResponseServices;
+    status?: string;
 }
 
-export interface InternalApiErrorResponse {
-  error?: InternalApiErrorDetails;
-}
-
-export interface InternalApiGenerateMnemonicResponse {
-  address?: string;
-  email?: string;
-  mnemonic?: string;
-  public_key?: string;
-}
-
-export type InternalApiHealthResponseServices = {[key: string]: string};
-
-export interface InternalApiHealthResponse {
-  services?: InternalApiHealthResponseServices;
-  status?: string;
-}
-
-export interface InternalApiInboxResponse {
-  address?: string;
-  count?: number;
-  email?: string;
-  emails?: InternalApiEmailResponse[];
-}
-
-export interface InternalApiValidateAddressResponse {
-  address?: string;
-  reason?: string;
-  valid?: boolean;
+export interface ApiInboxResponse {
+    address?: string;
+    count?: number;
+    email?: string;
+    emails?: ApiEmailResponse[];
 }
 
 /**
@@ -99,1196 +71,1352 @@ export interface InternalApiValidateAddressResponse {
  * @summary Health check
  */
 export type getApiHealthResponse200 = {
-  data: InternalApiHealthResponse
-  status: 200
-}
-    
-export type getApiHealthResponseSuccess = (getApiHealthResponse200) & {
-  headers: Headers;
+    data: ApiHealthResponse;
+    status: 200;
 };
-;
 
-export type getApiHealthResponse = (getApiHealthResponseSuccess)
+export type getApiHealthResponseSuccess = getApiHealthResponse200 & {
+    headers: Headers;
+};
+export type getApiHealthResponse = getApiHealthResponseSuccess;
 
 export const getGetApiHealthUrl = () => {
+    return `/api/health`;
+};
 
+export const getApiHealth = async (
+    options?: RequestInit,
+): Promise<getApiHealthResponse> => {
+    const res = await fetch(getGetApiHealthUrl(), {
+        ...options,
+        method: 'GET',
+    });
 
-  
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  return `/api/health`
-}
-
-export const getApiHealth = async ( options?: RequestInit): Promise<getApiHealthResponse> => {
-  
-  const res = await fetch(getGetApiHealthUrl(),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getApiHealthResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getApiHealthResponse
-}
-
-
-
-
+    const data: getApiHealthResponse['data'] = body ? JSON.parse(body) : {};
+    return {
+        data,
+        status: res.status,
+        headers: res.headers,
+    } as getApiHealthResponse;
+};
 
 export const getGetApiHealthInfiniteQueryKey = () => {
-    return [
-    'infinite', `/api/health`
-    ] as const;
-    }
+    return ['infinite', `/api/health`] as const;
+};
 
 export const getGetApiHealthQueryKey = () => {
-    return [
-    `/api/health`
-    ] as const;
-    }
+    return [`/api/health`] as const;
+};
 
-    
-export const getGetApiHealthInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>, TError = unknown>( options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>>, fetch?: RequestInit}
-) => {
+export const getGetApiHealthInfiniteQueryOptions = <
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>,
+    TError = unknown,
+>(options?: {
+    query?: Partial<
+        UseInfiniteQueryOptions<
+            Awaited<ReturnType<typeof getApiHealth>>,
+            TError,
+            TData
+        >
+    >;
+    fetch?: RequestInit;
+}) => {
+    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+    const queryKey =
+        queryOptions?.queryKey ?? getGetApiHealthInfiniteQueryKey();
 
-  const queryKey =  queryOptions?.queryKey ?? getGetApiHealthInfiniteQueryKey();
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiHealth>>> = ({
+        signal,
+    }) => getApiHealth({ signal, ...fetchOptions });
 
-  
+    return { queryKey, queryFn, ...queryOptions } as UseInfiniteQueryOptions<
+        Awaited<ReturnType<typeof getApiHealth>>,
+        TError,
+        TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiHealth>>> = ({ signal }) => getApiHealth({ signal, ...fetchOptions });
+export type GetApiHealthInfiniteQueryResult = NonNullable<
+    Awaited<ReturnType<typeof getApiHealth>>
+>;
+export type GetApiHealthInfiniteQueryError = unknown;
 
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetApiHealthInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiHealth>>>
-export type GetApiHealthInfiniteQueryError = unknown
-
-
-export function useGetApiHealthInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>, TError = unknown>(
-  options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiHealth>>,
-          TError,
-          Awaited<ReturnType<typeof getApiHealth>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiHealthInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>, TError = unknown>(
-  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiHealth>>,
-          TError,
-          Awaited<ReturnType<typeof getApiHealth>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiHealthInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>, TError = unknown>(
-  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiHealthInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>,
+    TError = unknown,
+>(
+    options: {
+        query: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiHealth>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                DefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiHealth>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiHealth>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): DefinedUseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiHealthInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>,
+    TError = unknown,
+>(
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiHealth>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                UndefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiHealth>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiHealth>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiHealthInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>,
+    TError = unknown,
+>(
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiHealth>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
 /**
  * @summary Health check
  */
 
-export function useGetApiHealthInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>, TError = unknown>(
-  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient 
- ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetApiHealthInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiHealth>>>,
+    TError = unknown,
+>(
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiHealth>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+} {
+    const queryOptions = getGetApiHealthInfiniteQueryOptions(options);
 
-  const queryOptions = getGetApiHealthInfiniteQueryOptions(options)
+    const query = useInfiniteQuery(
+        queryOptions,
+        queryClient,
+    ) as UseInfiniteQueryResult<TData, TError> & {
+        queryKey: DataTag<QueryKey, TData, TError>;
+    };
 
-  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+    return { ...query, queryKey: queryOptions.queryKey };
 }
 
+export const getGetApiHealthQueryOptions = <
+    TData = Awaited<ReturnType<typeof getApiHealth>>,
+    TError = unknown,
+>(options?: {
+    query?: Partial<
+        UseQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>
+    >;
+    fetch?: RequestInit;
+}) => {
+    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
+    const queryKey = queryOptions?.queryKey ?? getGetApiHealthQueryKey();
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiHealth>>> = ({
+        signal,
+    }) => getApiHealth({ signal, ...fetchOptions });
 
-export const getGetApiHealthQueryOptions = <TData = Awaited<ReturnType<typeof getApiHealth>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>>, fetch?: RequestInit}
-) => {
+    return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+        Awaited<ReturnType<typeof getApiHealth>>,
+        TError,
+        TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+export type GetApiHealthQueryResult = NonNullable<
+    Awaited<ReturnType<typeof getApiHealth>>
+>;
+export type GetApiHealthQueryError = unknown;
 
-  const queryKey =  queryOptions?.queryKey ?? getGetApiHealthQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiHealth>>> = ({ signal }) => getApiHealth({ signal, ...fetchOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetApiHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getApiHealth>>>
-export type GetApiHealthQueryError = unknown
-
-
-export function useGetApiHealth<TData = Awaited<ReturnType<typeof getApiHealth>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiHealth>>,
-          TError,
-          Awaited<ReturnType<typeof getApiHealth>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiHealth<TData = Awaited<ReturnType<typeof getApiHealth>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiHealth>>,
-          TError,
-          Awaited<ReturnType<typeof getApiHealth>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiHealth<TData = Awaited<ReturnType<typeof getApiHealth>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiHealth<
+    TData = Awaited<ReturnType<typeof getApiHealth>>,
+    TError = unknown,
+>(
+    options: {
+        query: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiHealth>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                DefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiHealth>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiHealth>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiHealth<
+    TData = Awaited<ReturnType<typeof getApiHealth>>,
+    TError = unknown,
+>(
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiHealth>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                UndefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiHealth>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiHealth>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiHealth<
+    TData = Awaited<ReturnType<typeof getApiHealth>>,
+    TError = unknown,
+>(
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiHealth>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
 /**
  * @summary Health check
  */
 
-export function useGetApiHealth<TData = Awaited<ReturnType<typeof getApiHealth>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiHealth>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetApiHealth<
+    TData = Awaited<ReturnType<typeof getApiHealth>>,
+    TError = unknown,
+>(
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiHealth>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+} {
+    const queryOptions = getGetApiHealthQueryOptions(options);
 
-  const queryOptions = getGetApiHealthQueryOptions(options)
+    const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+        TData,
+        TError
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+    return { ...query, queryKey: queryOptions.queryKey };
 }
-
-
-
-
-
-/**
- * Derive an address and public key from an existing BIP39 mnemonic phrase
- * @summary Derive address from mnemonic
- */
-export type postApiIdentityDeriveResponse200 = {
-  data: InternalApiDeriveAddressResponse
-  status: 200
-}
-
-export type postApiIdentityDeriveResponse400 = {
-  data: InternalApiErrorResponse
-  status: 400
-}
-    
-export type postApiIdentityDeriveResponseSuccess = (postApiIdentityDeriveResponse200) & {
-  headers: Headers;
-};
-export type postApiIdentityDeriveResponseError = (postApiIdentityDeriveResponse400) & {
-  headers: Headers;
-};
-
-export type postApiIdentityDeriveResponse = (postApiIdentityDeriveResponseSuccess | postApiIdentityDeriveResponseError)
-
-export const getPostApiIdentityDeriveUrl = () => {
-
-
-  
-
-  return `/api/identity/derive`
-}
-
-export const postApiIdentityDerive = async (internalApiDeriveAddressRequest: InternalApiDeriveAddressRequest, options?: RequestInit): Promise<postApiIdentityDeriveResponse> => {
-  
-  const res = await fetch(getPostApiIdentityDeriveUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      internalApiDeriveAddressRequest,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: postApiIdentityDeriveResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as postApiIdentityDeriveResponse
-}
-
-
-
-
-export const getPostApiIdentityDeriveMutationOptions = <TError = InternalApiErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIdentityDerive>>, TError,{data: InternalApiDeriveAddressRequest}, TContext>, fetch?: RequestInit}
-): UseMutationOptions<Awaited<ReturnType<typeof postApiIdentityDerive>>, TError,{data: InternalApiDeriveAddressRequest}, TContext> => {
-
-const mutationKey = ['postApiIdentityDerive'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiIdentityDerive>>, {data: InternalApiDeriveAddressRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  postApiIdentityDerive(data,fetchOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostApiIdentityDeriveMutationResult = NonNullable<Awaited<ReturnType<typeof postApiIdentityDerive>>>
-    export type PostApiIdentityDeriveMutationBody = InternalApiDeriveAddressRequest
-    export type PostApiIdentityDeriveMutationError = InternalApiErrorResponse
-
-    /**
- * @summary Derive address from mnemonic
- */
-export const usePostApiIdentityDerive = <TError = InternalApiErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIdentityDerive>>, TError,{data: InternalApiDeriveAddressRequest}, TContext>, fetch?: RequestInit}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postApiIdentityDerive>>,
-        TError,
-        {data: InternalApiDeriveAddressRequest},
-        TContext
-      > => {
-      return useMutation(getPostApiIdentityDeriveMutationOptions(options), queryClient);
-    }
-    
-/**
- * Generate a new BIP39 mnemonic phrase and derive an Ed25519 key pair with address
- * @summary Generate new identity
- */
-export type postApiIdentityGenerateResponse200 = {
-  data: InternalApiGenerateMnemonicResponse
-  status: 200
-}
-
-export type postApiIdentityGenerateResponse500 = {
-  data: InternalApiErrorResponse
-  status: 500
-}
-    
-export type postApiIdentityGenerateResponseSuccess = (postApiIdentityGenerateResponse200) & {
-  headers: Headers;
-};
-export type postApiIdentityGenerateResponseError = (postApiIdentityGenerateResponse500) & {
-  headers: Headers;
-};
-
-export type postApiIdentityGenerateResponse = (postApiIdentityGenerateResponseSuccess | postApiIdentityGenerateResponseError)
-
-export const getPostApiIdentityGenerateUrl = () => {
-
-
-  
-
-  return `/api/identity/generate`
-}
-
-export const postApiIdentityGenerate = async ( options?: RequestInit): Promise<postApiIdentityGenerateResponse> => {
-  
-  const res = await fetch(getPostApiIdentityGenerateUrl(),
-  {      
-    ...options,
-    method: 'POST'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: postApiIdentityGenerateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as postApiIdentityGenerateResponse
-}
-
-
-
-
-export const getPostApiIdentityGenerateMutationOptions = <TError = InternalApiErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIdentityGenerate>>, TError,void, TContext>, fetch?: RequestInit}
-): UseMutationOptions<Awaited<ReturnType<typeof postApiIdentityGenerate>>, TError,void, TContext> => {
-
-const mutationKey = ['postApiIdentityGenerate'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiIdentityGenerate>>, void> = () => {
-          
-
-          return  postApiIdentityGenerate(fetchOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostApiIdentityGenerateMutationResult = NonNullable<Awaited<ReturnType<typeof postApiIdentityGenerate>>>
-    
-    export type PostApiIdentityGenerateMutationError = InternalApiErrorResponse
-
-    /**
- * @summary Generate new identity
- */
-export const usePostApiIdentityGenerate = <TError = InternalApiErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIdentityGenerate>>, TError,void, TContext>, fetch?: RequestInit}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postApiIdentityGenerate>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getPostApiIdentityGenerateMutationOptions(options), queryClient);
-    }
-    
-/**
- * Check if an address is valid (16 hexadecimal characters)
- * @summary Validate address format
- */
-export type getApiIdentityValidateAddressResponse200 = {
-  data: InternalApiValidateAddressResponse
-  status: 200
-}
-
-export type getApiIdentityValidateAddressResponse400 = {
-  data: InternalApiErrorResponse
-  status: 400
-}
-    
-export type getApiIdentityValidateAddressResponseSuccess = (getApiIdentityValidateAddressResponse200) & {
-  headers: Headers;
-};
-export type getApiIdentityValidateAddressResponseError = (getApiIdentityValidateAddressResponse400) & {
-  headers: Headers;
-};
-
-export type getApiIdentityValidateAddressResponse = (getApiIdentityValidateAddressResponseSuccess | getApiIdentityValidateAddressResponseError)
-
-export const getGetApiIdentityValidateAddressUrl = (address: string,) => {
-
-
-  
-
-  return `/api/identity/validate/${address}`
-}
-
-export const getApiIdentityValidateAddress = async (address: string, options?: RequestInit): Promise<getApiIdentityValidateAddressResponse> => {
-  
-  const res = await fetch(getGetApiIdentityValidateAddressUrl(address),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getApiIdentityValidateAddressResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getApiIdentityValidateAddressResponse
-}
-
-
-
-
-
-export const getGetApiIdentityValidateAddressInfiniteQueryKey = (address: string,) => {
-    return [
-    'infinite', `/api/identity/validate/${address}`
-    ] as const;
-    }
-
-export const getGetApiIdentityValidateAddressQueryKey = (address: string,) => {
-    return [
-    `/api/identity/validate/${address}`
-    ] as const;
-    }
-
-    
-export const getGetApiIdentityValidateAddressInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>>, TError = InternalApiErrorResponse>(address: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>>, fetch?: RequestInit}
-) => {
-
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetApiIdentityValidateAddressInfiniteQueryKey(address);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>> = ({ signal }) => getApiIdentityValidateAddress(address, { signal, ...fetchOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(address), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetApiIdentityValidateAddressInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>>
-export type GetApiIdentityValidateAddressInfiniteQueryError = InternalApiErrorResponse
-
-
-export function useGetApiIdentityValidateAddressInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>>, TError = InternalApiErrorResponse>(
- address: string, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiIdentityValidateAddress>>,
-          TError,
-          Awaited<ReturnType<typeof getApiIdentityValidateAddress>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiIdentityValidateAddressInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiIdentityValidateAddress>>,
-          TError,
-          Awaited<ReturnType<typeof getApiIdentityValidateAddress>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiIdentityValidateAddressInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Validate address format
- */
-
-export function useGetApiIdentityValidateAddressInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient 
- ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetApiIdentityValidateAddressInfiniteQueryOptions(address,options)
-
-  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-export const getGetApiIdentityValidateAddressQueryOptions = <TData = Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError = InternalApiErrorResponse>(address: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>>, fetch?: RequestInit}
-) => {
-
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetApiIdentityValidateAddressQueryKey(address);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>> = ({ signal }) => getApiIdentityValidateAddress(address, { signal, ...fetchOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(address), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetApiIdentityValidateAddressQueryResult = NonNullable<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>>
-export type GetApiIdentityValidateAddressQueryError = InternalApiErrorResponse
-
-
-export function useGetApiIdentityValidateAddress<TData = Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError = InternalApiErrorResponse>(
- address: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiIdentityValidateAddress>>,
-          TError,
-          Awaited<ReturnType<typeof getApiIdentityValidateAddress>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiIdentityValidateAddress<TData = Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiIdentityValidateAddress>>,
-          TError,
-          Awaited<ReturnType<typeof getApiIdentityValidateAddress>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiIdentityValidateAddress<TData = Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Validate address format
- */
-
-export function useGetApiIdentityValidateAddress<TData = Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIdentityValidateAddress>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetApiIdentityValidateAddressQueryOptions(address,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
 
 /**
  * Delete all emails for a specific address
  * @summary Clear entire inbox
  */
 export type deleteApiInboxResponse200 = {
-  data: InternalApiDeleteResponse
-  status: 200
-}
+    data: ApiDeleteResponse;
+    status: 200;
+};
 
 export type deleteApiInboxResponse400 = {
-  data: InternalApiErrorResponse
-  status: 400
-}
+    data: ApiErrorResponse;
+    status: 400;
+};
 
 export type deleteApiInboxResponse500 = {
-  data: InternalApiErrorResponse
-  status: 500
-}
-    
-export type deleteApiInboxResponseSuccess = (deleteApiInboxResponse200) & {
-  headers: Headers;
-};
-export type deleteApiInboxResponseError = (deleteApiInboxResponse400 | deleteApiInboxResponse500) & {
-  headers: Headers;
+    data: ApiErrorResponse;
+    status: 500;
 };
 
-export type deleteApiInboxResponse = (deleteApiInboxResponseSuccess | deleteApiInboxResponseError)
+export type deleteApiInboxResponseSuccess = deleteApiInboxResponse200 & {
+    headers: Headers;
+};
+export type deleteApiInboxResponseError = (
+    | deleteApiInboxResponse400
+    | deleteApiInboxResponse500
+) & {
+    headers: Headers;
+};
+
+export type deleteApiInboxResponse =
+    | deleteApiInboxResponseSuccess
+    | deleteApiInboxResponseError;
 
 export const getDeleteApiInboxUrl = () => {
+    return `/api/inbox`;
+};
 
+export const deleteApiInbox = async (
+    options?: RequestInit,
+): Promise<deleteApiInboxResponse> => {
+    const res = await fetch(getDeleteApiInboxUrl(), {
+        ...options,
+        method: 'DELETE',
+    });
 
-  
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  return `/api/inbox`
-}
+    const data: deleteApiInboxResponse['data'] = body ? JSON.parse(body) : {};
+    return {
+        data,
+        status: res.status,
+        headers: res.headers,
+    } as deleteApiInboxResponse;
+};
 
-export const deleteApiInbox = async ( options?: RequestInit): Promise<deleteApiInboxResponse> => {
-  
-  const res = await fetch(getDeleteApiInboxUrl(),
-  {      
-    ...options,
-    method: 'DELETE'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: deleteApiInboxResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as deleteApiInboxResponse
-}
-
-
-
-
-export const getDeleteApiInboxMutationOptions = <TError = InternalApiErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiInbox>>, TError,void, TContext>, fetch?: RequestInit}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteApiInbox>>, TError,void, TContext> => {
-
-const mutationKey = ['deleteApiInbox'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiInbox>>, void> = () => {
-          
-
-          return  deleteApiInbox(fetchOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteApiInboxMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiInbox>>>
-    
-    export type DeleteApiInboxMutationError = InternalApiErrorResponse
-
-    /**
- * @summary Clear entire inbox
- */
-export const useDeleteApiInbox = <TError = InternalApiErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiInbox>>, TError,void, TContext>, fetch?: RequestInit}
- , queryClient?: QueryClient): UseMutationResult<
+export const getDeleteApiInboxMutationOptions = <
+    TError = ApiErrorResponse,
+    TContext = unknown,
+>(options?: {
+    mutation?: UseMutationOptions<
         Awaited<ReturnType<typeof deleteApiInbox>>,
         TError,
         void,
         TContext
-      > => {
-      return useMutation(getDeleteApiInboxMutationOptions(options), queryClient);
-    }
-    
+    >;
+    fetch?: RequestInit;
+}): UseMutationOptions<
+    Awaited<ReturnType<typeof deleteApiInbox>>,
+    TError,
+    void,
+    TContext
+> => {
+    const mutationKey = ['deleteApiInbox'];
+    const { mutation: mutationOptions, fetch: fetchOptions } = options
+        ? options.mutation &&
+          'mutationKey' in options.mutation &&
+          options.mutation.mutationKey
+            ? options
+            : { ...options, mutation: { ...options.mutation, mutationKey } }
+        : { mutation: { mutationKey }, fetch: undefined };
+
+    const mutationFn: MutationFunction<
+        Awaited<ReturnType<typeof deleteApiInbox>>,
+        void
+    > = () => {
+        return deleteApiInbox(fetchOptions);
+    };
+
+    return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteApiInboxMutationResult = NonNullable<
+    Awaited<ReturnType<typeof deleteApiInbox>>
+>;
+
+export type DeleteApiInboxMutationError = ApiErrorResponse;
+
+/**
+ * @summary Clear entire inbox
+ */
+export const useDeleteApiInbox = <
+    TError = ApiErrorResponse,
+    TContext = unknown,
+>(
+    options?: {
+        mutation?: UseMutationOptions<
+            Awaited<ReturnType<typeof deleteApiInbox>>,
+            TError,
+            void,
+            TContext
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseMutationResult<
+    Awaited<ReturnType<typeof deleteApiInbox>>,
+    TError,
+    void,
+    TContext
+> => {
+    return useMutation(getDeleteApiInboxMutationOptions(options), queryClient);
+};
+
 /**
  * Retrieve all emails for a specific address
  * @summary Get inbox emails
  */
 export type getApiInboxAddressResponse200 = {
-  data: InternalApiInboxResponse
-  status: 200
-}
+    data: ApiInboxResponse;
+    status: 200;
+};
 
 export type getApiInboxAddressResponse400 = {
-  data: InternalApiErrorResponse
-  status: 400
-}
+    data: ApiErrorResponse;
+    status: 400;
+};
 
 export type getApiInboxAddressResponse500 = {
-  data: InternalApiErrorResponse
-  status: 500
-}
-    
-export type getApiInboxAddressResponseSuccess = (getApiInboxAddressResponse200) & {
-  headers: Headers;
-};
-export type getApiInboxAddressResponseError = (getApiInboxAddressResponse400 | getApiInboxAddressResponse500) & {
-  headers: Headers;
+    data: ApiErrorResponse;
+    status: 500;
 };
 
-export type getApiInboxAddressResponse = (getApiInboxAddressResponseSuccess | getApiInboxAddressResponseError)
+export type getApiInboxAddressResponseSuccess =
+    getApiInboxAddressResponse200 & {
+        headers: Headers;
+    };
+export type getApiInboxAddressResponseError = (
+    | getApiInboxAddressResponse400
+    | getApiInboxAddressResponse500
+) & {
+    headers: Headers;
+};
 
-export const getGetApiInboxAddressUrl = (address: string,) => {
+export type getApiInboxAddressResponse =
+    | getApiInboxAddressResponseSuccess
+    | getApiInboxAddressResponseError;
 
+export const getGetApiInboxAddressUrl = (address: string) => {
+    return `/api/inbox/${address}`;
+};
 
-  
+export const getApiInboxAddress = async (
+    address: string,
+    options?: RequestInit,
+): Promise<getApiInboxAddressResponse> => {
+    const res = await fetch(getGetApiInboxAddressUrl(address), {
+        ...options,
+        method: 'GET',
+    });
 
-  return `/api/inbox/${address}`
-}
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-export const getApiInboxAddress = async (address: string, options?: RequestInit): Promise<getApiInboxAddressResponse> => {
-  
-  const res = await fetch(getGetApiInboxAddressUrl(address),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
+    const data: getApiInboxAddressResponse['data'] = body
+        ? JSON.parse(body)
+        : {};
+    return {
+        data,
+        status: res.status,
+        headers: res.headers,
+    } as getApiInboxAddressResponse;
+};
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getApiInboxAddressResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getApiInboxAddressResponse
-}
+export const getGetApiInboxAddressInfiniteQueryKey = (address: string) => {
+    return ['infinite', `/api/inbox/${address}`] as const;
+};
 
+export const getGetApiInboxAddressQueryKey = (address: string) => {
+    return [`/api/inbox/${address}`] as const;
+};
 
-
-
-
-export const getGetApiInboxAddressInfiniteQueryKey = (address: string,) => {
-    return [
-    'infinite', `/api/inbox/${address}`
-    ] as const;
-    }
-
-export const getGetApiInboxAddressQueryKey = (address: string,) => {
-    return [
-    `/api/inbox/${address}`
-    ] as const;
-    }
-
-    
-export const getGetApiInboxAddressInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>, TError = InternalApiErrorResponse>(address: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>>, fetch?: RequestInit}
+export const getGetApiInboxAddressInfiniteQueryOptions = <
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
 ) => {
+    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+    const queryKey =
+        queryOptions?.queryKey ??
+        getGetApiInboxAddressInfiniteQueryKey(address);
 
-  const queryKey =  queryOptions?.queryKey ?? getGetApiInboxAddressInfiniteQueryKey(address);
+    const queryFn: QueryFunction<
+        Awaited<ReturnType<typeof getApiInboxAddress>>
+    > = ({ signal }) =>
+        getApiInboxAddress(address, { signal, ...fetchOptions });
 
-  
+    return {
+        queryKey,
+        queryFn,
+        enabled: !!address,
+        ...queryOptions,
+    } as UseInfiniteQueryOptions<
+        Awaited<ReturnType<typeof getApiInboxAddress>>,
+        TError,
+        TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiInboxAddress>>> = ({ signal }) => getApiInboxAddress(address, { signal, ...fetchOptions });
+export type GetApiInboxAddressInfiniteQueryResult = NonNullable<
+    Awaited<ReturnType<typeof getApiInboxAddress>>
+>;
+export type GetApiInboxAddressInfiniteQueryError = ApiErrorResponse;
 
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(address), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetApiInboxAddressInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiInboxAddress>>>
-export type GetApiInboxAddressInfiniteQueryError = InternalApiErrorResponse
-
-
-export function useGetApiInboxAddressInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>, TError = InternalApiErrorResponse>(
- address: string, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiInboxAddress>>,
-          TError,
-          Awaited<ReturnType<typeof getApiInboxAddress>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiInboxAddressInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiInboxAddress>>,
-          TError,
-          Awaited<ReturnType<typeof getApiInboxAddress>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiInboxAddressInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiInboxAddressInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options: {
+        query: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                DefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiInboxAddress>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiInboxAddress>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): DefinedUseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiInboxAddressInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                UndefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiInboxAddress>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiInboxAddress>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiInboxAddressInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
 /**
  * @summary Get inbox emails
  */
 
-export function useGetApiInboxAddressInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient 
- ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetApiInboxAddressInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddress>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+} {
+    const queryOptions = getGetApiInboxAddressInfiniteQueryOptions(
+        address,
+        options,
+    );
 
-  const queryOptions = getGetApiInboxAddressInfiniteQueryOptions(address,options)
+    const query = useInfiniteQuery(
+        queryOptions,
+        queryClient,
+    ) as UseInfiniteQueryResult<TData, TError> & {
+        queryKey: DataTag<QueryKey, TData, TError>;
+    };
 
-  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+    return { ...query, queryKey: queryOptions.queryKey };
 }
 
-
-
-
-export const getGetApiInboxAddressQueryOptions = <TData = Awaited<ReturnType<typeof getApiInboxAddress>>, TError = InternalApiErrorResponse>(address: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>>, fetch?: RequestInit}
+export const getGetApiInboxAddressQueryOptions = <
+    TData = Awaited<ReturnType<typeof getApiInboxAddress>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
 ) => {
+    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+    const queryKey =
+        queryOptions?.queryKey ?? getGetApiInboxAddressQueryKey(address);
 
-  const queryKey =  queryOptions?.queryKey ?? getGetApiInboxAddressQueryKey(address);
+    const queryFn: QueryFunction<
+        Awaited<ReturnType<typeof getApiInboxAddress>>
+    > = ({ signal }) =>
+        getApiInboxAddress(address, { signal, ...fetchOptions });
 
-  
+    return {
+        queryKey,
+        queryFn,
+        enabled: !!address,
+        ...queryOptions,
+    } as UseQueryOptions<
+        Awaited<ReturnType<typeof getApiInboxAddress>>,
+        TError,
+        TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiInboxAddress>>> = ({ signal }) => getApiInboxAddress(address, { signal, ...fetchOptions });
+export type GetApiInboxAddressQueryResult = NonNullable<
+    Awaited<ReturnType<typeof getApiInboxAddress>>
+>;
+export type GetApiInboxAddressQueryError = ApiErrorResponse;
 
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(address), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetApiInboxAddressQueryResult = NonNullable<Awaited<ReturnType<typeof getApiInboxAddress>>>
-export type GetApiInboxAddressQueryError = InternalApiErrorResponse
-
-
-export function useGetApiInboxAddress<TData = Awaited<ReturnType<typeof getApiInboxAddress>>, TError = InternalApiErrorResponse>(
- address: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiInboxAddress>>,
-          TError,
-          Awaited<ReturnType<typeof getApiInboxAddress>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiInboxAddress<TData = Awaited<ReturnType<typeof getApiInboxAddress>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiInboxAddress>>,
-          TError,
-          Awaited<ReturnType<typeof getApiInboxAddress>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiInboxAddress<TData = Awaited<ReturnType<typeof getApiInboxAddress>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiInboxAddress<
+    TData = Awaited<ReturnType<typeof getApiInboxAddress>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options: {
+        query: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                DefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiInboxAddress>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiInboxAddress>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiInboxAddress<
+    TData = Awaited<ReturnType<typeof getApiInboxAddress>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                UndefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiInboxAddress>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiInboxAddress>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiInboxAddress<
+    TData = Awaited<ReturnType<typeof getApiInboxAddress>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
 /**
  * @summary Get inbox emails
  */
 
-export function useGetApiInboxAddress<TData = Awaited<ReturnType<typeof getApiInboxAddress>>, TError = InternalApiErrorResponse>(
- address: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddress>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetApiInboxAddress<
+    TData = Awaited<ReturnType<typeof getApiInboxAddress>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddress>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+} {
+    const queryOptions = getGetApiInboxAddressQueryOptions(address, options);
 
-  const queryOptions = getGetApiInboxAddressQueryOptions(address,options)
+    const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+        TData,
+        TError
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+    return { ...query, queryKey: queryOptions.queryKey };
 }
-
-
-
-
 
 /**
  * Delete a specific email by ID for an address
  * @summary Delete single email
  */
 export type deleteApiInboxAddressEmailIdResponse200 = {
-  data: InternalApiDeleteResponse
-  status: 200
-}
+    data: ApiDeleteResponse;
+    status: 200;
+};
 
 export type deleteApiInboxAddressEmailIdResponse400 = {
-  data: InternalApiErrorResponse
-  status: 400
-}
+    data: ApiErrorResponse;
+    status: 400;
+};
 
 export type deleteApiInboxAddressEmailIdResponse500 = {
-  data: InternalApiErrorResponse
-  status: 500
-}
-    
-export type deleteApiInboxAddressEmailIdResponseSuccess = (deleteApiInboxAddressEmailIdResponse200) & {
-  headers: Headers;
-};
-export type deleteApiInboxAddressEmailIdResponseError = (deleteApiInboxAddressEmailIdResponse400 | deleteApiInboxAddressEmailIdResponse500) & {
-  headers: Headers;
+    data: ApiErrorResponse;
+    status: 500;
 };
 
-export type deleteApiInboxAddressEmailIdResponse = (deleteApiInboxAddressEmailIdResponseSuccess | deleteApiInboxAddressEmailIdResponseError)
+export type deleteApiInboxAddressEmailIdResponseSuccess =
+    deleteApiInboxAddressEmailIdResponse200 & {
+        headers: Headers;
+    };
+export type deleteApiInboxAddressEmailIdResponseError = (
+    | deleteApiInboxAddressEmailIdResponse400
+    | deleteApiInboxAddressEmailIdResponse500
+) & {
+    headers: Headers;
+};
 
-export const getDeleteApiInboxAddressEmailIdUrl = (address: string,
-    emailId: string,) => {
+export type deleteApiInboxAddressEmailIdResponse =
+    | deleteApiInboxAddressEmailIdResponseSuccess
+    | deleteApiInboxAddressEmailIdResponseError;
 
+export const getDeleteApiInboxAddressEmailIdUrl = (
+    address: string,
+    emailId: string,
+) => {
+    return `/api/inbox/${address}/${emailId}`;
+};
 
-  
+export const deleteApiInboxAddressEmailId = async (
+    address: string,
+    emailId: string,
+    options?: RequestInit,
+): Promise<deleteApiInboxAddressEmailIdResponse> => {
+    const res = await fetch(
+        getDeleteApiInboxAddressEmailIdUrl(address, emailId),
+        {
+            ...options,
+            method: 'DELETE',
+        },
+    );
 
-  return `/api/inbox/${address}/${emailId}`
-}
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-export const deleteApiInboxAddressEmailId = async (address: string,
-    emailId: string, options?: RequestInit): Promise<deleteApiInboxAddressEmailIdResponse> => {
-  
-  const res = await fetch(getDeleteApiInboxAddressEmailIdUrl(address,emailId),
-  {      
-    ...options,
-    method: 'DELETE'
-    
-    
-  }
-)
+    const data: deleteApiInboxAddressEmailIdResponse['data'] = body
+        ? JSON.parse(body)
+        : {};
+    return {
+        data,
+        status: res.status,
+        headers: res.headers,
+    } as deleteApiInboxAddressEmailIdResponse;
+};
 
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: deleteApiInboxAddressEmailIdResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as deleteApiInboxAddressEmailIdResponse
-}
-
-
-
-
-export const getDeleteApiInboxAddressEmailIdMutationOptions = <TError = InternalApiErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>, TError,{address: string;emailId: string}, TContext>, fetch?: RequestInit}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>, TError,{address: string;emailId: string}, TContext> => {
-
-const mutationKey = ['deleteApiInboxAddressEmailId'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>, {address: string;emailId: string}> = (props) => {
-          const {address,emailId} = props ?? {};
-
-          return  deleteApiInboxAddressEmailId(address,emailId,fetchOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteApiInboxAddressEmailIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>>
-    
-    export type DeleteApiInboxAddressEmailIdMutationError = InternalApiErrorResponse
-
-    /**
- * @summary Delete single email
- */
-export const useDeleteApiInboxAddressEmailId = <TError = InternalApiErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>, TError,{address: string;emailId: string}, TContext>, fetch?: RequestInit}
- , queryClient?: QueryClient): UseMutationResult<
+export const getDeleteApiInboxAddressEmailIdMutationOptions = <
+    TError = ApiErrorResponse,
+    TContext = unknown,
+>(options?: {
+    mutation?: UseMutationOptions<
         Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>,
         TError,
-        {address: string;emailId: string},
+        { address: string; emailId: string },
         TContext
-      > => {
-      return useMutation(getDeleteApiInboxAddressEmailIdMutationOptions(options), queryClient);
-    }
-    
+    >;
+    fetch?: RequestInit;
+}): UseMutationOptions<
+    Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>,
+    TError,
+    { address: string; emailId: string },
+    TContext
+> => {
+    const mutationKey = ['deleteApiInboxAddressEmailId'];
+    const { mutation: mutationOptions, fetch: fetchOptions } = options
+        ? options.mutation &&
+          'mutationKey' in options.mutation &&
+          options.mutation.mutationKey
+            ? options
+            : { ...options, mutation: { ...options.mutation, mutationKey } }
+        : { mutation: { mutationKey }, fetch: undefined };
+
+    const mutationFn: MutationFunction<
+        Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>,
+        { address: string; emailId: string }
+    > = (props) => {
+        const { address, emailId } = props ?? {};
+
+        return deleteApiInboxAddressEmailId(address, emailId, fetchOptions);
+    };
+
+    return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteApiInboxAddressEmailIdMutationResult = NonNullable<
+    Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>
+>;
+
+export type DeleteApiInboxAddressEmailIdMutationError = ApiErrorResponse;
+
+/**
+ * @summary Delete single email
+ */
+export const useDeleteApiInboxAddressEmailId = <
+    TError = ApiErrorResponse,
+    TContext = unknown,
+>(
+    options?: {
+        mutation?: UseMutationOptions<
+            Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>,
+            TError,
+            { address: string; emailId: string },
+            TContext
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseMutationResult<
+    Awaited<ReturnType<typeof deleteApiInboxAddressEmailId>>,
+    TError,
+    { address: string; emailId: string },
+    TContext
+> => {
+    return useMutation(
+        getDeleteApiInboxAddressEmailIdMutationOptions(options),
+        queryClient,
+    );
+};
+
 /**
  * Retrieve a specific email by ID for an address
  * @summary Get single email
  */
 export type getApiInboxAddressEmailIdResponse200 = {
-  data: InternalApiEmailResponse
-  status: 200
-}
+    data: ApiEmailResponse;
+    status: 200;
+};
 
 export type getApiInboxAddressEmailIdResponse400 = {
-  data: InternalApiErrorResponse
-  status: 400
-}
+    data: ApiErrorResponse;
+    status: 400;
+};
 
 export type getApiInboxAddressEmailIdResponse404 = {
-  data: InternalApiErrorResponse
-  status: 404
-}
+    data: ApiErrorResponse;
+    status: 404;
+};
 
 export type getApiInboxAddressEmailIdResponse500 = {
-  data: InternalApiErrorResponse
-  status: 500
-}
-    
-export type getApiInboxAddressEmailIdResponseSuccess = (getApiInboxAddressEmailIdResponse200) & {
-  headers: Headers;
-};
-export type getApiInboxAddressEmailIdResponseError = (getApiInboxAddressEmailIdResponse400 | getApiInboxAddressEmailIdResponse404 | getApiInboxAddressEmailIdResponse500) & {
-  headers: Headers;
+    data: ApiErrorResponse;
+    status: 500;
 };
 
-export type getApiInboxAddressEmailIdResponse = (getApiInboxAddressEmailIdResponseSuccess | getApiInboxAddressEmailIdResponseError)
+export type getApiInboxAddressEmailIdResponseSuccess =
+    getApiInboxAddressEmailIdResponse200 & {
+        headers: Headers;
+    };
+export type getApiInboxAddressEmailIdResponseError = (
+    | getApiInboxAddressEmailIdResponse400
+    | getApiInboxAddressEmailIdResponse404
+    | getApiInboxAddressEmailIdResponse500
+) & {
+    headers: Headers;
+};
 
-export const getGetApiInboxAddressEmailIdUrl = (address: string,
-    emailId: string,) => {
+export type getApiInboxAddressEmailIdResponse =
+    | getApiInboxAddressEmailIdResponseSuccess
+    | getApiInboxAddressEmailIdResponseError;
 
-
-  
-
-  return `/api/inbox/${address}/${emailId}`
-}
-
-export const getApiInboxAddressEmailId = async (address: string,
-    emailId: string, options?: RequestInit): Promise<getApiInboxAddressEmailIdResponse> => {
-  
-  const res = await fetch(getGetApiInboxAddressEmailIdUrl(address,emailId),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getApiInboxAddressEmailIdResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getApiInboxAddressEmailIdResponse
-}
-
-
-
-
-
-export const getGetApiInboxAddressEmailIdInfiniteQueryKey = (address: string,
-    emailId: string,) => {
-    return [
-    'infinite', `/api/inbox/${address}/${emailId}`
-    ] as const;
-    }
-
-export const getGetApiInboxAddressEmailIdQueryKey = (address: string,
-    emailId: string,) => {
-    return [
-    `/api/inbox/${address}/${emailId}`
-    ] as const;
-    }
-
-    
-export const getGetApiInboxAddressEmailIdInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>, TError = InternalApiErrorResponse>(address: string,
-    emailId: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>>, fetch?: RequestInit}
+export const getGetApiInboxAddressEmailIdUrl = (
+    address: string,
+    emailId: string,
 ) => {
+    return `/api/inbox/${address}/${emailId}`;
+};
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+export const getApiInboxAddressEmailId = async (
+    address: string,
+    emailId: string,
+    options?: RequestInit,
+): Promise<getApiInboxAddressEmailIdResponse> => {
+    const res = await fetch(getGetApiInboxAddressEmailIdUrl(address, emailId), {
+        ...options,
+        method: 'GET',
+    });
 
-  const queryKey =  queryOptions?.queryKey ?? getGetApiInboxAddressEmailIdInfiniteQueryKey(address,emailId);
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  
+    const data: getApiInboxAddressEmailIdResponse['data'] = body
+        ? JSON.parse(body)
+        : {};
+    return {
+        data,
+        status: res.status,
+        headers: res.headers,
+    } as getApiInboxAddressEmailIdResponse;
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>> = ({ signal }) => getApiInboxAddressEmailId(address,emailId, { signal, ...fetchOptions });
+export const getGetApiInboxAddressEmailIdInfiniteQueryKey = (
+    address: string,
+    emailId: string,
+) => {
+    return ['infinite', `/api/inbox/${address}/${emailId}`] as const;
+};
 
-      
+export const getGetApiInboxAddressEmailIdQueryKey = (
+    address: string,
+    emailId: string,
+) => {
+    return [`/api/inbox/${address}/${emailId}`] as const;
+};
 
-      
+export const getGetApiInboxAddressEmailIdInfiniteQueryOptions = <
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+) => {
+    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
-   return  { queryKey, queryFn, enabled: !!(address && emailId), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
+    const queryKey =
+        queryOptions?.queryKey ??
+        getGetApiInboxAddressEmailIdInfiniteQueryKey(address, emailId);
 
-export type GetApiInboxAddressEmailIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>
-export type GetApiInboxAddressEmailIdInfiniteQueryError = InternalApiErrorResponse
+    const queryFn: QueryFunction<
+        Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
+    > = ({ signal }) =>
+        getApiInboxAddressEmailId(address, emailId, {
+            signal,
+            ...fetchOptions,
+        });
 
+    return {
+        queryKey,
+        queryFn,
+        enabled: !!(address && emailId),
+        ...queryOptions,
+    } as UseInfiniteQueryOptions<
+        Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+        TError,
+        TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-export function useGetApiInboxAddressEmailIdInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>, TError = InternalApiErrorResponse>(
- address: string,
-    emailId: string, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
-          TError,
-          Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiInboxAddressEmailIdInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>, TError = InternalApiErrorResponse>(
- address: string,
-    emailId: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
-          TError,
-          Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiInboxAddressEmailIdInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>, TError = InternalApiErrorResponse>(
- address: string,
-    emailId: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export type GetApiInboxAddressEmailIdInfiniteQueryResult = NonNullable<
+    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
+>;
+export type GetApiInboxAddressEmailIdInfiniteQueryError = ApiErrorResponse;
+
+export function useGetApiInboxAddressEmailIdInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options: {
+        query: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                DefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): DefinedUseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiInboxAddressEmailIdInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                UndefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiInboxAddressEmailIdInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
 /**
  * @summary Get single email
  */
 
-export function useGetApiInboxAddressEmailIdInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>, TError = InternalApiErrorResponse>(
- address: string,
-    emailId: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient 
- ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetApiInboxAddressEmailIdInfinite<
+    TData = InfiniteData<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options?: {
+        query?: Partial<
+            UseInfiniteQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseInfiniteQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+} {
+    const queryOptions = getGetApiInboxAddressEmailIdInfiniteQueryOptions(
+        address,
+        emailId,
+        options,
+    );
 
-  const queryOptions = getGetApiInboxAddressEmailIdInfiniteQueryOptions(address,emailId,options)
+    const query = useInfiniteQuery(
+        queryOptions,
+        queryClient,
+    ) as UseInfiniteQueryResult<TData, TError> & {
+        queryKey: DataTag<QueryKey, TData, TError>;
+    };
 
-  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+    return { ...query, queryKey: queryOptions.queryKey };
 }
 
-
-
-
-export const getGetApiInboxAddressEmailIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError = InternalApiErrorResponse>(address: string,
-    emailId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>>, fetch?: RequestInit}
+export const getGetApiInboxAddressEmailIdQueryOptions = <
+    TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
 ) => {
+    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+    const queryKey =
+        queryOptions?.queryKey ??
+        getGetApiInboxAddressEmailIdQueryKey(address, emailId);
 
-  const queryKey =  queryOptions?.queryKey ?? getGetApiInboxAddressEmailIdQueryKey(address,emailId);
+    const queryFn: QueryFunction<
+        Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
+    > = ({ signal }) =>
+        getApiInboxAddressEmailId(address, emailId, {
+            signal,
+            ...fetchOptions,
+        });
 
-  
+    return {
+        queryKey,
+        queryFn,
+        enabled: !!(address && emailId),
+        ...queryOptions,
+    } as UseQueryOptions<
+        Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+        TError,
+        TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>> = ({ signal }) => getApiInboxAddressEmailId(address,emailId, { signal, ...fetchOptions });
+export type GetApiInboxAddressEmailIdQueryResult = NonNullable<
+    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
+>;
+export type GetApiInboxAddressEmailIdQueryError = ApiErrorResponse;
 
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(address && emailId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetApiInboxAddressEmailIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>>
-export type GetApiInboxAddressEmailIdQueryError = InternalApiErrorResponse
-
-
-export function useGetApiInboxAddressEmailId<TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError = InternalApiErrorResponse>(
- address: string,
-    emailId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
-          TError,
-          Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiInboxAddressEmailId<TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError = InternalApiErrorResponse>(
- address: string,
-    emailId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
-          TError,
-          Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiInboxAddressEmailId<TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError = InternalApiErrorResponse>(
- address: string,
-    emailId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiInboxAddressEmailId<
+    TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options: {
+        query: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                DefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiInboxAddressEmailId<
+    TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                UndefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                    TError,
+                    Awaited<ReturnType<typeof getApiInboxAddressEmailId>>
+                >,
+                'initialData'
+            >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiInboxAddressEmailId<
+    TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+};
 /**
  * @summary Get single email
  */
 
-export function useGetApiInboxAddressEmailId<TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError = InternalApiErrorResponse>(
- address: string,
-    emailId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiInboxAddressEmailId>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetApiInboxAddressEmailId<
+    TData = Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+    TError = ApiErrorResponse,
+>(
+    address: string,
+    emailId: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiInboxAddressEmailId>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+    },
+    queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+} {
+    const queryOptions = getGetApiInboxAddressEmailIdQueryOptions(
+        address,
+        emailId,
+        options,
+    );
 
-  const queryOptions = getGetApiInboxAddressEmailIdQueryOptions(address,emailId,options)
+    const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+        TData,
+        TError
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
+    return { ...query, queryKey: queryOptions.queryKey };
 }
