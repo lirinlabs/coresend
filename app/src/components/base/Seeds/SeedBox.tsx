@@ -1,4 +1,4 @@
-import SeedSlot from "./SeedSlot";
+import SeedSlot from './SeedSlot';
 
 export const SeedBox = ({
     seedWords,
@@ -9,12 +9,12 @@ export const SeedBox = ({
     onChangeWord: (index: number, value: string) => void;
     onKeyDownWord: (
         index: number,
-        e: React.KeyboardEvent<HTMLInputElement>
+        e: React.KeyboardEvent<HTMLInputElement>,
     ) => void;
 }) => {
     return (
-        <div className="border border-foreground p-6 mb-8 bg-background shadow-hard">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className='border border-foreground p-6 mb-8 bg-background shadow-hard'>
+            <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
                 {seedWords.map((word, index) => (
                     <SeedSlot
                         key={index}

@@ -1,12 +1,12 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
     /* Typography */
-    --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
-    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+    --font-sans: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
 
     /* Border Radius Scale */
     --radius-sm: calc(var(--radius) - 4px);

@@ -1,6 +1,6 @@
-export { InboxList } from "./InboxList"
-export { InboxListHeader } from "./InboxListHeader"
-export { InboxListItem } from "./InboxListItem"
-export { InboxListEmpty } from "./InboxListEmpty"
-export { mockEmails } from "./mockData"
-export type { Email, InboxListProps } from "./types"
+export { InboxList } from './InboxList';
+export { InboxListHeader } from './InboxListHeader';
+export { InboxListItem } from './InboxListItem';
+export { InboxListEmpty } from './InboxListEmpty';
+export { mockEmails } from './mockData';
+export type { Email, InboxListProps } from './types';

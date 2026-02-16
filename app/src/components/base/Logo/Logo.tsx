@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom";
-import Typography from "../Typography/typography";
+import { useNavigate } from 'react-router-dom';
+import Typography from '../Typography/typography';
 
 interface LogoProps {
     navigate?: boolean;
@@ -10,14 +10,14 @@ export const Logo = ({ navigate }: LogoProps) => {
 
     const logoContent = (
         <Typography
-            weight="semibold"
-            text="sm"
-            tracking="tight"
-            font="mono"
-            color="foreground"
-            as="span"
-            transform="uppercase"
-            className="leading-none"
+            weight='semibold'
+            text='sm'
+            tracking='tight'
+            font='mono'
+            color='foreground'
+            as='span'
+            transform='uppercase'
+            className='leading-none'
         >
             CORESEND
         </Typography>
@@ -26,9 +26,9 @@ export const Logo = ({ navigate }: LogoProps) => {
     if (navigate) {
         return (
             <button
-                type="button"
-                onClick={() => nav("/")}
-                className="cursor-pointer"
+                type='button'
+                onClick={() => nav('/')}
+                className='cursor-pointer'
             >
                 {logoContent}
             </button>
