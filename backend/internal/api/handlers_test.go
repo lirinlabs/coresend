@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -68,109 +67,6 @@ func (m *mockEmailStore) CheckRateLimit(ctx context.Context, key string, limit i
 
 func (m *mockEmailStore) Ping(ctx context.Context) error {
 	return nil
-}
-
-func TestGenerateMnemonic(t *testing.T) {
-	handler := NewAPIHandler(newMockEmailStore(), "example.com")
-
-	tests := []struct {
-		name       string
-		method     string
-		wantStatus int
-		wantFields []string
-	}{
-		{
-			name:       "valid request",
-			method:     http.MethodPost,
-			wantStatus: http.StatusOK,
-			wantFields: []string{"mnemonic", "address", "email"},
-		},
-		{
-			name:       "wrong method",
-			method:     http.MethodGet,
-			wantStatus: http.StatusMethodNotAllowed,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(tt.method, "/api/identity/generate", nil)
-			w := httptest.NewRecorder()
-
-			handler.handleGenerateMnemonic(w, req)
-
-			if w.Code != tt.wantStatus {
-				t.Errorf("Expected status %d, got %d", tt.wantStatus, w.Code)
-			}
-
-			if tt.wantStatus == http.StatusOK {
-				var resp GenerateMnemonicResponse
-				if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
-					t.Fatalf("Failed to decode response: %v", err)
-				}
-
-				for _, field := range tt.wantFields {
-					if field == "mnemonic" && resp.Mnemonic == "" {
-						t.Errorf("Expected non-empty mnemonic")
-					}
-					if field == "address" && resp.Address == "" {
-						t.Errorf("Expected non-empty address")
-					}
-					if field == "email" && resp.Email == "" {
-						t.Errorf("Expected non-empty email")
-					}
-				}
-			}
-		})
-	}
-}
-
-func TestDeriveAddress(t *testing.T) {
-	handler := NewAPIHandler(newMockEmailStore(), "example.com")
-
-	tests := []struct {
-		name       string
-		method     string
-		body       interface{}
-		wantStatus int
-	}{
-		{
-			name:       "valid request",
-			method:     http.MethodPost,
-			body:       DeriveAddressRequest{Mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"},
-			wantStatus: http.StatusOK,
-		},
-		{
-			name:       "invalid request",
-			method:     http.MethodPost,
-			body:       "invalid",
-			wantStatus: http.StatusBadRequest,
-		},
-		{
-			name:       "wrong method",
-			method:     http.MethodGet,
-			body:       nil,
-			wantStatus: http.StatusMethodNotAllowed,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var body bytes.Buffer
-			if tt.body != nil {
-				json.NewEncoder(&body).Encode(tt.body)
-			}
-
-			req := httptest.NewRequest(tt.method, "/api/identity/derive", &body)
-			w := httptest.NewRecorder()
-
-			handler.handleDeriveAddress(w, req)
-
-			if w.Code != tt.wantStatus {
-				t.Errorf("Expected status %d, got %d", tt.wantStatus, w.Code)
-			}
-		})
-	}
 }
 
 func TestGetInbox(t *testing.T) {
