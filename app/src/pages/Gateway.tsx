@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '@/components/base/Button/Button';
 import { GatewayHeader } from '@/components/base/Header/GatewayHeader';
 import { SeedBox } from '@/components/base/Seeds/SeedBox';
@@ -30,6 +30,11 @@ const Gateway = () => {
             ),
         );
     };
+
+    // Clears state on unmount
+    useEffect(() => {
+        return () => setSeedWords(EMPTY_SEED_WORDS);
+    }, []);
 
     return (
         <div className='w-full h-dvh flex flex-col'>
