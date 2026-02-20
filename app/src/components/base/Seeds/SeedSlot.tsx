@@ -6,14 +6,20 @@ interface SeedSlotProps {
     value: string;
     onChange: (value: string) => void;
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    isInvalid?: boolean;
 }
 
 const SeedSlot = forwardRef<HTMLInputElement, SeedSlotProps>(
-    ({ index, value, onChange, onKeyDown }, ref) => {
+    ({ index, value, onChange, onKeyDown, isInvalid }, ref) => {
         const slotNumber = String(index + 1).padStart(2, '0');
         const [isFocused, setIsFocused] = useState(false);
+        const borderColor = isInvalid
+            ? 'border-destructive'
+            : 'border-foreground';
         return (
-            <div className='border border-foreground bg-background px-3 py-2 transition-colors focus-within:bg-secondary flex items-baseline gap-2'>
+            <div
+                className={`border ${borderColor} bg-background px-3 py-2 transition-colors focus-within:bg-secondary flex items-baseline gap-2`}
+            >
                 <Typography
                     color='muted'
                     font='mono'
