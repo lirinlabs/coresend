@@ -15,12 +15,45 @@ import ExternalLinkIcon from '@/components/ui/external-link-icon';
 import HeartIcon from '@/components/ui/heart-icon';
 import WalletIcon from '@/components/ui/wallet-icon';
 import Typography from '../Typography/typography';
+import { useState, useRef, useEffect } from 'react';
 
 export const SettingsMenu = () => {
+    const [copiedAddress, setCopiedAddress] = useState<
+        'solana' | 'evm' | 'bitcoin' | null
+    >(null);
+    const timeoutRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+    const handleCopy = async (
+        address: string,
+        type: 'solana' | 'evm' | 'bitcoin',
+    ) => {
+        const success = await copyToClipboard(address);
+        if (success) {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+
+            setCopiedAddress(type);
+
+            timeoutRef.current = setTimeout(() => {
+                setCopiedAddress(null);
+                timeoutRef.current = null;
+            }, 2000);
+        }
+    };
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <button
+                    type='button'
                     className='text-muted-foreground hover:text-foreground transition-colors'
                     aria-label='Settings'
                 >
@@ -68,7 +101,7 @@ export const SettingsMenu = () => {
 
                 <DropdownMenuItem asChild>
                     <a
-                        href='https://github.com/coresend'
+                        href='https://github.com/lirinlabs/coresend/'
                         target='_blank'
                         rel='noopener noreferrer'
                         className='flex items-center gap-2 cursor-pointer'
@@ -100,7 +133,8 @@ export const SettingsMenu = () => {
                 </DropdownMenuLabel>
 
                 <DropdownMenuItem
-                    onClick={() => copyToClipboard(solanaAddress)}
+                    onClick={() => handleCopy(solanaAddress, 'solana')}
+                    onSelect={(e) => e.preventDefault()}
                     className='flex flex-col items-start gap-0.5 cursor-pointer'
                 >
                     <div className='flex items-center gap-1'>
@@ -119,16 +153,19 @@ export const SettingsMenu = () => {
                         truncate
                         tracking='tight'
                         weight='medium'
-                        color='muted'
+                        color={copiedAddress === 'solana' ? 'primary' : 'muted'}
                         font='mono'
-                        className='w-full'
+                        className='w-full transition-colors'
                     >
-                        {solanaAddress}
+                        {copiedAddress === 'solana'
+                            ? '✓ Copied!'
+                            : solanaAddress}
                     </Typography>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                    onClick={() => copyToClipboard(evmAddress)}
+                    onClick={() => handleCopy(evmAddress, 'evm')}
+                    onSelect={(e) => e.preventDefault()}
                     className='flex flex-col items-start gap-0.5 cursor-pointer'
                 >
                     <div className='flex items-center gap-1'>
@@ -148,16 +185,17 @@ export const SettingsMenu = () => {
                         truncate
                         tracking='tight'
                         weight='medium'
-                        color='muted'
+                        color={copiedAddress === 'evm' ? 'primary' : 'muted'}
                         font='mono'
-                        className='w-full'
+                        className='w-full transition-colors'
                     >
-                        {evmAddress}
+                        {copiedAddress === 'evm' ? '✓ Copied!' : evmAddress}
                     </Typography>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                    onClick={() => copyToClipboard(evmAddress)}
+                    onClick={() => handleCopy(bitcoinAddress, 'bitcoin')}
+                    onSelect={(e) => e.preventDefault()}
                     className='flex flex-col items-start gap-0.5 cursor-pointer'
                 >
                     <div className='flex items-center gap-1'>
@@ -177,11 +215,15 @@ export const SettingsMenu = () => {
                         truncate
                         tracking='tight'
                         weight='medium'
-                        color='muted'
+                        color={
+                            copiedAddress === 'bitcoin' ? 'primary' : 'muted'
+                        }
                         font='mono'
-                        className='w-full'
+                        className='w-full transition-colors'
                     >
-                        {bitcoinAddress}
+                        {copiedAddress === 'bitcoin'
+                            ? '✓ Copied!'
+                            : bitcoinAddress}
                     </Typography>
                 </DropdownMenuItem>
 
