@@ -21,14 +21,13 @@ export const InboxListItem = ({
         onDelete();
     };
 
-    const handleSelect = () => {
-        onSelect(email);
-    };
-
     return (
-        <button
-            type='button'
-            onClick={handleSelect}
+        <div
+            role='button'
+            tabIndex={0}
+            onClick={() => onSelect(email)}
+            aria-pressed={isSelected}
+            aria-label={`Select email from ${email.from} with subject ${email.subject}`}
             className={cn(
                 'group w-full text-left px-4 py-3 border-b border-border cursor-pointer transition-colors',
                 isSelected
@@ -50,6 +49,7 @@ export const InboxListItem = ({
                     type='button'
                     className='opacity-0 group-hover:opacity-100 transition-opacity shrink-0'
                     onClick={handleDelete}
+                    aria-label='Delete email'
                 >
                     <TrashIcon
                         size={16}
@@ -75,6 +75,6 @@ export const InboxListItem = ({
             >
                 TTL: <span className='text-primary'>{email.ttl}</span>
             </Typography>
-        </button>
+        </div>
     );
 };
