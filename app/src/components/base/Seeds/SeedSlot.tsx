@@ -24,13 +24,13 @@ const SeedSlot = forwardRef<HTMLInputElement, SeedSlotProps>(
                 </Typography>
                 <input
                     ref={ref}
-                    type={isFocused ? 'text' : 'password'}
+                    type={'text'}
                     autoCorrect='off'
                     autoCapitalize='off'
                     name='field-1'
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
-                    value={value}
+                    value={!isFocused && value ? '••••••' : value}
                     onChange={(e) =>
                         onChange(e.target.value.toLowerCase().trim())
                     }

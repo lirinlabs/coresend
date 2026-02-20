@@ -3,15 +3,19 @@ import Button from '@/components/base/Button/Button';
 import { GatewayHeader } from '@/components/base/Header/GatewayHeader';
 import { SeedBox } from '@/components/base/Seeds/SeedBox';
 import Typography from '@/components/base/Typography/typography';
-import { generateMnemonic, mnemonicToWords } from '@/lib/identity';
+import { mnemonicToWords } from '@/lib/crypto/mnemonicToWords';
+import { generateMnemonic } from '@scure/bip39';
 import { useNavigate } from 'react-router-dom';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
 
 const WORD_COUNT = 12;
-const EMPTY_SEED_WORDS = new Array(WORD_COUNT).fill('');
+const ENTROPY_BITS = 128;
 
 const Gateway = () => {
     const navigate = useNavigate();
-    const [seedWords, setSeedWords] = useState<string[]>(EMPTY_SEED_WORDS);
+    const [seedWords, setSeedWords] = useState<string[]>(
+        Array(WORD_COUNT).fill(''),
+    );
 
     const updateWordAtIndex = (index: number, value: string) => {
         setSeedWords((prev) => {
@@ -22,7 +26,7 @@ const Gateway = () => {
     };
 
     const handleGenerateNewSeed = () => {
-        const words = mnemonicToWords(generateMnemonic());
+        const words = mnemonicToWords(generateMnemonic(wordlist, ENTROPY_BITS));
         setSeedWords(
             Array.from(
                 { length: WORD_COUNT },
@@ -33,7 +37,7 @@ const Gateway = () => {
 
     // Clears state on unmount
     useEffect(() => {
-        return () => setSeedWords(EMPTY_SEED_WORDS);
+        return () => setSeedWords(Array(WORD_COUNT).fill(''));
     }, []);
 
     return (
