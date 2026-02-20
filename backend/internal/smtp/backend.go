@@ -10,7 +10,7 @@ import (
 
 	"github.com/emersion/go-message/mail"
 	gosmtp "github.com/emersion/go-smtp"
-	"github.com/fn-jakubkarp/coresend/internal/identity"
+	"github.com/fn-jakubkarp/coresend/internal/addr"
 	"github.com/fn-jakubkarp/coresend/internal/store"
 )
 
@@ -38,7 +38,7 @@ func (s *Session) Rcpt(to string, opts *gosmtp.RcptOptions) error {
 	log.Printf("RCPT TO: %s", to)
 
 	localPart := extractLocalPart(to)
-	if !identity.IsValidAddress(localPart) {
+	if !addr.IsValid(localPart) {
 		log.Printf("Rejected invalid address: %s", to)
 		return &gosmtp.SMTPError{
 			Code:         550,

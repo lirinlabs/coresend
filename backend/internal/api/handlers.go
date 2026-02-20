@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fn-jakubkarp/coresend/internal/identity"
+	"github.com/fn-jakubkarp/coresend/internal/addr"
 	"github.com/fn-jakubkarp/coresend/internal/store"
 
 	_ "github.com/fn-jakubkarp/coresend/docs"
@@ -48,7 +48,7 @@ func (h *APIHandler) handleGetInbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	address := parts[0]
-	if !identity.IsValidAddress(address) {
+	if !addr.IsValid(address) {
 		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
 			"provided":        address,
 			"expected_length": 16,
@@ -114,7 +114,7 @@ func (h *APIHandler) handleGetEmail(w http.ResponseWriter, r *http.Request) {
 	address := parts[0]
 	emailID := parts[1]
 
-	if !identity.IsValidAddress(address) {
+	if !addr.IsValid(address) {
 		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
 			"provided":        address,
 			"expected_length": 16,
@@ -174,7 +174,7 @@ func (h *APIHandler) handleDeleteEmail(w http.ResponseWriter, r *http.Request) {
 	address := parts[0]
 	emailID := parts[1]
 
-	if !identity.IsValidAddress(address) {
+	if !addr.IsValid(address) {
 		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
 			"provided":        address,
 			"expected_length": 16,
@@ -221,7 +221,7 @@ func (h *APIHandler) handleClearInbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	address := parts[0]
-	if !identity.IsValidAddress(address) {
+	if !addr.IsValid(address) {
 		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
 			"provided":        address,
 			"expected_length": 16,

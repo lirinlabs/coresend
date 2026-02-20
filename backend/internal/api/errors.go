@@ -5,7 +5,6 @@ import "net/http"
 
 const (
 	ErrCodeInvalidAddress     = "INVALID_ADDRESS"
-	ErrCodeInvalidMnemonic    = "INVALID_MNEMONIC"
 	ErrCodeNotFound           = "NOT_FOUND"
 	ErrCodeInternalError      = "INTERNAL_ERROR"
 	ErrCodeServiceUnavailable = "SERVICE_UNAVAILABLE"

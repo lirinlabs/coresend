@@ -2,7 +2,7 @@
 
 ## What is CoreSend?
 
-CoreSend is a **temporary/disposable email service** with identity-based authentication. It provides throwaway email addresses derived from BIP39 mnemonics (12-word seed phrases) and Ed25519 cryptographic key pairs. Users receive a 16-character hex address that serves as their inbox identifier.
+CoreSend is a **temporary/disposable email service**. Users receive a 16-character hex address (derived client-side from a BIP39 mnemonic) that serves as their inbox identifier. **All cryptographic operations are intentionally client-side only** — the backend performs no key derivation, mnemonic handling, or signature verification.
 
 ## Repository Structure
 
@@ -26,9 +26,9 @@ coresend/
 - **HTTP**: standard `net/http` — no third-party router
 - **SMTP**: `github.com/emersion/go-smtp`
 - **Storage**: Redis (sorted sets for inbox, key expiry for TTL, pipeline for rate limiting)
-- **Identity**: Ed25519 keys derived deterministically from BIP39 12-word mnemonics via HMAC-SHA256 seed; 16-char hex address = first 16 hex chars of SHA-256(pubkey)
+- **Identity**: All crypto is client-side only (see frontend). The backend stores and routes email by 16-char hex address; it does not derive keys or verify signatures.
 - **API docs**: Swagger via `github.com/swaggo/swag` — regenerate with `make -C backend swagger`
-- **Auth**: Request signing — four headers: `X-Auth-Address`, `X-Auth-Timestamp`, `X-Auth-Pubkey`, `X-Auth-Signature`
+- **Auth**: Single header `X-Auth-Address` — the backend checks the address is a valid 16-hex-char format and matches the path; no signature verification.
 
 ### Frontend (`app/`)
 - **Framework**: React 19 + TypeScript, bundled with Vite
@@ -46,14 +46,14 @@ coresend/
 
 | Package | Path | Purpose |
 |---|---|---|
-| `identity` | `backend/internal/identity/generator.go` | Mnemonic generation, key derivation, address validation, message signing |
+| `addr` | `backend/internal/addr/validate.go` | Shared address format validation (`^[a-f0-9]{16}$`) |
 | `store` | `backend/internal/store/redis.go` | `EmailStore` interface + Redis implementation; inbox CRUD, rate limiting |
-| `smtp` | `backend/internal/smtp/backend.go` | SMTP backend that saves incoming emails to the store |
+| `smtp` | `backend/internal/smtp/backend.go` | SMTP backend that saves incoming emails to the store; validates 16-hex-char address format |
 | `api` | `backend/internal/api/` | HTTP handlers, auth/rate-limit/CORS/logging middleware, router |
 
 ## API Endpoints
 
-All inbox endpoints require the four auth headers and validate that the `{address}` in the path matches the authenticated address.
+All inbox endpoints require the `X-Auth-Address` header containing the 16-hex-char inbox address. The backend verifies that it matches the `{address}` path segment — no signature or key verification is performed.
 
 | Method | Path | Description |
 |---|---|---|
@@ -68,18 +68,21 @@ Limits: max 100 emails per inbox, 24-hour TTL. Rate limits: 60 GET/min, 30 DELET
 
 ## Authentication Flow
 
-### Backend identity (`backend/internal/identity/generator.go`)
-1. `DeriveEd25519KeyPair(mnemonic)` derives a 32-byte seed via `HMAC-SHA256(key="coresend-auth", data=mnemonic)` then calls `ed25519.NewKeyFromSeed(seed)`.
-2. `AddressFromPublicKey(pubkey)` → `hex(SHA-256(pubkey))[:16]` — **16-character** hex address.
-3. `CreateMessageToSign(address, timestamp)` returns `address + "|" + string(rune(timestamp))`.
-4. For each protected API request the client must send: `X-Auth-Address`, `X-Auth-Timestamp` (Unix ms), `X-Auth-Pubkey` (hex), `X-Auth-Signature` (Ed25519 hex).
+All crypto is **client-side only**. The backend does not perform key derivation, mnemonic generation, or signature verification.
 
 ### Frontend identity (`app/src/lib/crypto/deriveIdentityFromMnemonic.ts`)
-> ⚠️ The frontend implementation currently diverges from the backend in two ways:
-> 1. **Seed derivation**: uses the standard BIP39 `mnemonicToSeedSync` (64-byte seed, first 32 bytes used as private key) rather than the backend's HMAC-SHA256 approach.
-> 2. **Address length**: takes `slice(0, 40)` of the hex digest (40 chars / 20 bytes) rather than the backend's 16 chars.
->
-> These divergences mean the frontend-derived address will **not** match what the backend expects. The Inbox page currently uses mock data and the live API integration is incomplete; reconciling the identity derivation is a prerequisite before wiring up the real API calls.
+1. User enters or generates a BIP39 12-word mnemonic in the browser.
+2. `deriveIdentityFromMnemonic(mnemonic)` uses `mnemonicToSeedSync` (64-byte BIP39 seed, first 32 bytes = private key) and `@noble/curves/ed25519` to produce `(privateKey, publicKey, address)`.
+3. `address` = `bytesToHex(sha256(publicKey)).slice(0, 40)` — **40 hex chars (20 bytes)**.
+4. The address is stored in `sessionStorage` and sent as `X-Auth-Address` on every inbox API request.
+
+> ⚠️ **Known divergence to resolve**: The address derivation algorithm above (BIP39 `mnemonicToSeedSync`, 40-char address) does not yet match the backend's address validation regex (`^[a-f0-9]{16}$`, 16 chars). The frontend must be updated so the address it derives is exactly 16 hex characters, or the backend regex must be updated to match the frontend's output. Reconciling this is a prerequisite for wiring up the live API.
+
+### Backend auth (`backend/internal/api/middleware.go`)
+The `authMiddleware` only checks:
+1. `X-Auth-Address` header is present.
+2. The value matches `^[a-f0-9]{16}$`.
+3. The value equals the `{address}` segment of the request path.
 
 ## Development Workflow
 
@@ -167,6 +170,8 @@ docker compose up -d
 - The Go module path is `github.com/fn-jakubkarp/coresend` (not the org name `lirinlabs`); use this path in all Go imports.
 - After modifying any Swagger annotations in `backend/cmd/server/main.go` or `backend/internal/api/`, run `make -C backend swagger` to regenerate `backend/docs/`; then run `orval` (or `bun run gen`) to update `app/src/api/generated.ts`.
 - The `handleGetInbox` route (`/api/inbox/`) handles GET (list) and — depending on path depth — also GET of a single email and DELETE of a single email. Check `router.go` before adding new routes because the same URL prefix is reused with method differentiation inside the handler.
-- `CreateMessageToSign` uses `string(rune(timestamp))` which converts the int64 timestamp to a single Unicode code-point character string, not a decimal string. Any client implementation must replicate this exact (unusual) serialization or authentication will fail.
+- **Do not add crypto to the backend.** All cryptographic operations (mnemonic generation, key derivation, address derivation, signing) are intentionally client-side only.
+- The address format expected by the backend is `^[a-f0-9]{16}$` (16 lowercase hex chars). The frontend currently derives a 40-char address — this must be reconciled before live API integration.
 - Redis sorted-set members are raw JSON strings; `DeleteEmail` re-marshals the email to find the exact member to remove.
 - TLS/STARTTLS is optional; if cert/key env vars are missing the server starts without it (logged as a warning, not a fatal error).
+
