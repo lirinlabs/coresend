@@ -240,6 +240,55 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/register/{address}": {
+            "post": {
+                "security": [
+                    {
+                        "SignatureAuth": []
+                    }
+                ],
+                "description": "Register a derived address to actively receive emails for the next 24 hours",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "Register address for inbound mail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Address to register",
+                        "name": "address",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.RegisterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -337,6 +386,20 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/api.EmailResponse"
                     }
+                }
+            }
+        },
+        "api.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "registered": {
+                    "type": "boolean"
                 }
             }
         }

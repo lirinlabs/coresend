@@ -70,6 +70,12 @@ export interface ApiInboxResponse {
   emails?: ApiEmailResponse[];
 }
 
+export interface ApiRegisterResponse {
+  address?: string;
+  expires_in?: number;
+  registered?: boolean;
+}
+
 /**
  * Check API and services health status
  * @summary Health check
@@ -879,3 +885,108 @@ export function useGetApiInboxAddressEmailId<TData = Awaited<ReturnType<typeof g
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+
+
+
+
+/**
+ * Register a derived address to actively receive emails for the next 24 hours
+ * @summary Register address for inbound mail
+ */
+export type postApiRegisterAddressResponse200 = {
+  data: ApiRegisterResponse
+  status: 200
+}
+
+export type postApiRegisterAddressResponse400 = {
+  data: ApiErrorResponse
+  status: 400
+}
+
+export type postApiRegisterAddressResponse500 = {
+  data: ApiErrorResponse
+  status: 500
+}
+
+export type postApiRegisterAddressResponseSuccess = (postApiRegisterAddressResponse200) & {
+  headers: Headers;
+};
+export type postApiRegisterAddressResponseError = (postApiRegisterAddressResponse400 | postApiRegisterAddressResponse500) & {
+  headers: Headers;
+};
+
+export type postApiRegisterAddressResponse = (postApiRegisterAddressResponseSuccess | postApiRegisterAddressResponseError)
+
+export const getPostApiRegisterAddressUrl = (address: string,) => {
+
+
+  
+
+  return `/api/register/${address}`
+}
+
+export const postApiRegisterAddress = async (address: string, options?: RequestInit): Promise<postApiRegisterAddressResponse> => {
+  
+  const res = await fetch(getPostApiRegisterAddressUrl(address),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  
+  const data: postApiRegisterAddressResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as postApiRegisterAddressResponse
+}
+  
+
+
+
+export const getPostApiRegisterAddressMutationOptions = <TError = ApiErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiRegisterAddress>>, TError,{address: string}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiRegisterAddress>>, TError,{address: string}, TContext> => {
+
+const mutationKey = ['postApiRegisterAddress'];
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiRegisterAddress>>, {address: string}> = (props) => {
+          const {address} = props ?? {};
+
+          return  postApiRegisterAddress(address,fetchOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiRegisterAddressMutationResult = NonNullable<Awaited<ReturnType<typeof postApiRegisterAddress>>>
+    
+    export type PostApiRegisterAddressMutationError = ApiErrorResponse
+
+    /**
+ * @summary Register address for inbound mail
+ */
+export const usePostApiRegisterAddress = <TError = ApiErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiRegisterAddress>>, TError,{address: string}, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiRegisterAddress>>,
+        TError,
+        {address: string},
+        TContext
+      > => {
+      return useMutation(getPostApiRegisterAddressMutationOptions(options), queryClient);
+    }
