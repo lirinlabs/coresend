@@ -9,18 +9,19 @@ import {
     generateMnemonicWords,
 } from '@/lib/crypto/validateMnemonic';
 import { useNavigate } from 'react-router-dom';
+import { useRegister } from '@/hooks/useRegister';
 
 const WORD_COUNT = 12;
 const ENTROPY_BITS = 128;
 
 const Gateway = () => {
     const navigate = useNavigate();
+    const { mutateAsync: register, isPending } = useRegister();
     const [seedWords, setSeedWords] = useState<string[]>(
         Array(WORD_COUNT).fill(''),
     );
     const [error, setError] = useState<string | null>(null);
     const [invalidIndices, setInvalidIndices] = useState<number[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
     const updateWordAtIndex = (index: number, value: string) => {
@@ -36,7 +37,6 @@ const Gateway = () => {
     const handleUnlockInbox = async () => {
         setError(null);
         setInvalidIndices([]);
-        setIsLoading(true);
 
         try {
             const validation = validateSeedWords(seedWords);
@@ -44,7 +44,6 @@ const Gateway = () => {
             if (!validation.valid) {
                 setError(validation.error!);
                 setInvalidIndices(validation.invalidIndices || []);
-                setIsLoading(false);
                 return;
             }
 
@@ -52,12 +51,8 @@ const Gateway = () => {
 
             const identity = deriveIdentityFromMnemonic(mnemonic);
 
-            // TODO: Remove for prod
-            if (import.meta.env.DEV) {
-                console.log('Derived identity address:', identity.address);
-            }
+            await register({ address: identity.address });
 
-            // TODO: Change: Store identity in sessionStorage for now
             sessionStorage.setItem(
                 'identity',
                 JSON.stringify({
@@ -68,13 +63,7 @@ const Gateway = () => {
 
             navigate('/inbox');
         } catch (err) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : 'Failed to derive identity',
-            );
-        } finally {
-            setIsLoading(false);
+            setError(err instanceof Error ? err.message : 'Failed to register');
         }
     };
 
@@ -102,7 +91,7 @@ const Gateway = () => {
     };
 
     const isButtonDisabled =
-        isLoading || seedWords.some((word) => !word.trim());
+        isPending || seedWords.some((word) => !word.trim());
 
     useEffect(() => {
         return () => setSeedWords(Array(WORD_COUNT).fill(''));
@@ -170,15 +159,15 @@ const Gateway = () => {
                         disabled={isButtonDisabled}
                         style={{ opacity: isButtonDisabled ? 0.5 : 1 }}
                     >
-                        {isLoading ? 'Unlocking...' : 'Unlock Inbox'}
+                        {isPending ? 'Unlocking...' : 'Unlock Inbox'}
                     </Button>
                     <Button
                         variant='secondary'
                         size='md'
                         className='flex-1 w-full'
                         onClick={handleGenerateNewSeed}
-                        disabled={isLoading}
-                        style={{ opacity: isLoading ? 0.5 : 1 }}
+                        disabled={isPending}
+                        style={{ opacity: isPending ? 0.5 : 1 }}
                     >
                         Generate New Seed
                     </Button>
