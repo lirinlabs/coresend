@@ -2,14 +2,15 @@ package api
 
 import (
 	"crypto/ed25519"
+	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/fn-jakubkarp/coresend/internal/identity"
 	"github.com/fn-jakubkarp/coresend/internal/store"
 )
 
@@ -46,7 +47,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Auth-Address, X-Auth-Timestamp, X-Auth-Pubkey, X-Auth-Signature")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Public-Key, X-Signature, X-Timestamp")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -65,77 +66,55 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func authMiddleware(next http.Handler) http.Handler {
+func signatureAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		addressHeader := r.Header.Get("X-Auth-Address")
-		timestampHeader := r.Header.Get("X-Auth-Timestamp")
-		pubkeyHeader := r.Header.Get("X-Auth-Pubkey")
-		signatureHeader := r.Header.Get("X-Auth-Signature")
+		pubKeyHex := r.Header.Get("X-Public-Key")
+		sigHex := r.Header.Get("X-Signature")
+		tsStr := r.Header.Get("X-Timestamp")
 
-		if addressHeader == "" || timestampHeader == "" || pubkeyHeader == "" || signatureHeader == "" {
+		if pubKeyHex == "" || sigHex == "" || tsStr == "" {
 			writeError(w, ErrCodeUnauthorized, "Missing authentication headers", http.StatusUnauthorized)
 			return
 		}
 
-		if !identity.IsValidAddress(addressHeader) {
-			writeError(w, ErrCodeUnauthorized, "Invalid address format", http.StatusUnauthorized)
-			return
-		}
-
-		timestamp, err := strconv.ParseInt(timestampHeader, 10, 64)
+		ts, err := strconv.ParseInt(tsStr, 10, 64)
 		if err != nil {
 			writeError(w, ErrCodeUnauthorized, "Invalid timestamp format", http.StatusUnauthorized)
 			return
 		}
 
-		now := time.Now().UnixMilli()
-		if timestamp < now-60000 || timestamp > now+60000 {
-			writeError(w, ErrCodeUnauthorized, "Timestamp expired or future", http.StatusUnauthorized)
+		clientTime := time.Unix(ts, 0)
+		timeDiff := time.Since(clientTime)
+		if timeDiff > 5*time.Minute || timeDiff < -5*time.Minute {
+			writeError(w, ErrCodeUnauthorized, "Request expired or invalid timestamp", http.StatusUnauthorized)
 			return
 		}
 
-		pubkey, err := hex.DecodeString(pubkeyHeader)
-		if err != nil || len(pubkey) != 32 {
+		pubKeyBytes, err := hex.DecodeString(pubKeyHex)
+		if err != nil || len(pubKeyBytes) != ed25519.PublicKeySize {
 			writeError(w, ErrCodeUnauthorized, "Invalid public key format", http.StatusUnauthorized)
 			return
 		}
 
-		signature, err := hex.DecodeString(signatureHeader)
-		if err != nil || len(signature) != 64 {
+		sigBytes, err := hex.DecodeString(sigHex)
+		if err != nil || len(sigBytes) != ed25519.SignatureSize {
 			writeError(w, ErrCodeUnauthorized, "Invalid signature format", http.StatusUnauthorized)
 			return
 		}
 
-		derivedAddress := identity.AddressFromPublicKey(pubkey)
-		if !strings.EqualFold(derivedAddress, addressHeader) {
-			log.Printf("Auth failed: derived=%s, header=%s", derivedAddress, addressHeader)
-			writeError(w, ErrCodeUnauthorized, "Address does not match public key", http.StatusUnauthorized)
+		hash := sha256.Sum256(pubKeyBytes)
+		derivedAddress := hex.EncodeToString(hash[:])[:40]
+
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(parts) < 3 || parts[2] != derivedAddress {
+			writeError(w, ErrCodeUnauthorized, "Access denied: address does not match public key", http.StatusForbidden)
 			return
 		}
 
-		message := identity.CreateMessageToSign(addressHeader, timestamp)
-		if !ed25519.Verify(pubkey, []byte(message), signature) {
-			log.Printf("Signature verification failed for address=%s", addressHeader)
-			writeError(w, ErrCodeUnauthorized, "Invalid signature", http.StatusUnauthorized)
-			return
-		}
+		payload := fmt.Sprintf("%s:%s:%s", r.Method, r.URL.Path, tsStr)
 
-		pathParts := strings.Split(r.URL.Path, "/")
-		var pathAddress string
-		for i, part := range pathParts {
-			if part == "inbox" && i+1 < len(pathParts) {
-				pathAddress = pathParts[i+1]
-				break
-			}
-		}
-
-		if pathAddress == "" {
-			writeError(w, ErrCodeUnauthorized, "Invalid request path", http.StatusUnauthorized)
-			return
-		}
-
-		if !strings.EqualFold(pathAddress, addressHeader) {
-			writeError(w, ErrCodeUnauthorized, "Address mismatch", http.StatusUnauthorized)
+		if !ed25519.Verify(pubKeyBytes, []byte(payload), sigBytes) {
+			writeError(w, ErrCodeUnauthorized, "Invalid cryptographic signature", http.StatusUnauthorized)
 			return
 		}
 

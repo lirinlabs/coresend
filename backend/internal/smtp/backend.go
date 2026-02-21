@@ -10,8 +10,8 @@ import (
 
 	"github.com/emersion/go-message/mail"
 	gosmtp "github.com/emersion/go-smtp"
-	"github.com/fn-jakubkarp/coresend/internal/identity"
 	"github.com/fn-jakubkarp/coresend/internal/store"
+	"github.com/fn-jakubkarp/coresend/internal/validator"
 )
 
 type Backend struct {
@@ -37,17 +37,40 @@ func (s *Session) Mail(from string, opts *gosmtp.MailOptions) error {
 func (s *Session) Rcpt(to string, opts *gosmtp.RcptOptions) error {
 	log.Printf("RCPT TO: %s", to)
 
-	localPart := extractLocalPart(to)
-	if !identity.IsValidAddress(localPart) {
-		log.Printf("Rejected invalid address: %s", to)
+	localPart := strings.ToLower(extractLocalPart(to))
+
+	if !validator.IsValidHexAddress(localPart) {
+		log.Printf("Rejected malformed address: %s", to)
 		return &gosmtp.SMTPError{
 			Code:         550,
 			EnhancedCode: gosmtp.EnhancedCode{5, 1, 1},
-			Message:      "Mailbox does not exist",
+			Message:      "Invalid address format",
 		}
 	}
 
-	s.To = append(s.To, strings.ToLower(localPart))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	isValid, err := s.Store.IsAddressActive(ctx, localPart)
+	if err != nil {
+		log.Printf("Redis error checking address %s: %v", localPart, err)
+		return &gosmtp.SMTPError{
+			Code:         451,
+			EnhancedCode: gosmtp.EnhancedCode{4, 3, 0},
+			Message:      "Temporary server error, please try again later",
+		}
+	}
+
+	if !isValid {
+		log.Printf("Rejected inactive address: %s", to)
+		return &gosmtp.SMTPError{
+			Code:         550,
+			EnhancedCode: gosmtp.EnhancedCode{5, 1, 1},
+			Message:      "Mailbox does not exist or is currently inactive",
+		}
+	}
+
+	s.To = append(s.To, localPart)
 	return nil
 }
 
@@ -114,7 +137,11 @@ func (s *Session) Data(r io.Reader) error {
 	// Save email to each recipient's inbox
 	var lastErr error
 	for _, recipient := range s.To {
-		if err := s.Store.SaveEmail(context.Background(), recipient, email); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		err := s.Store.SaveEmail(ctx, recipient, email)
+		cancel()
+
+		if err != nil {
 			log.Printf("Error saving email for %s: %v", recipient, err)
 			lastErr = err
 		}

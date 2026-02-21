@@ -1,29 +1,10 @@
 package api
 
-type GenerateMnemonicResponse struct {
-	Mnemonic  string `json:"mnemonic"`
-	Address   string `json:"address"`
-	PublicKey string `json:"public_key"`
-	Email     string `json:"email"`
+type RegisterResponse struct {
+	Registered bool   `json:"registered"`
+	Address    string `json:"address"`
+	ExpiresIn  int    `json:"expires_in"`
 }
-
-type DeriveAddressRequest struct {
-	Mnemonic string `json:"mnemonic"`
-}
-
-type DeriveAddressResponse struct {
-	Address   string `json:"address"`
-	Email     string `json:"email"`
-	PublicKey string `json:"public_key,omitempty"`
-	Valid     bool   `json:"valid"`
-}
-
-type ValidateAddressResponse struct {
-	Address string `json:"address"`
-	Valid   bool   `json:"valid"`
-	Reason  string `json:"reason,omitempty"`
-}
-
 type EmailResponse struct {
 	ID         string   `json:"id"`
 	From       string   `json:"from"`

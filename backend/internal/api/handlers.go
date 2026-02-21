@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strings"
-
-	"github.com/fn-jakubkarp/coresend/internal/identity"
-	"github.com/fn-jakubkarp/coresend/internal/store"
+	"time"
 
 	_ "github.com/fn-jakubkarp/coresend/docs"
+	"github.com/fn-jakubkarp/coresend/internal/store"
+	"github.com/fn-jakubkarp/coresend/internal/validator"
 )
 
 type APIHandler struct {
@@ -24,6 +23,48 @@ func NewAPIHandler(s store.EmailStore, domain string) *APIHandler {
 	}
 }
 
+// @Summary Register address for inbound mail
+// @Description Register a derived address to actively receive emails for the next 24 hours
+// @Tags inbox
+// @Accept json
+// @Produce json
+// @Param address path string true "Address to register"
+// @Success 200 {object} RegisterResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security SignatureAuth
+// @Router /api/register/{address} [post]
+func (h *APIHandler) handleRegister(w http.ResponseWriter, r *http.Request) {
+	address := r.PathValue("address")
+	if address == "" {
+		writeError(w, ErrCodeInvalidAddress, "Address is required", http.StatusBadRequest)
+		return
+	}
+
+	if !validator.IsValidHexAddress(address) {
+		writeError(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest)
+		return
+	}
+
+	ttl := 24 * time.Hour
+
+	err := h.Store.RegisterAddress(r.Context(), address, ttl)
+	if err != nil {
+		log.Printf("Error registering address: %v", err)
+		writeError(w, ErrCodeInternalError, "Failed to register address", http.StatusInternalServerError)
+		return
+	}
+
+	resp := RegisterResponse{
+		Registered: true,
+		Address:    address,
+		ExpiresIn:  int(ttl.Seconds()),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
 // @Summary Get inbox emails
 // @Description Retrieve all emails for a specific address
 // @Tags inbox
@@ -36,23 +77,9 @@ func NewAPIHandler(s store.EmailStore, domain string) *APIHandler {
 // @Security SignatureAuth
 // @Router /api/inbox/{address} [get]
 func (h *APIHandler) handleGetInbox(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/inbox/"), "/")
-	if len(parts) == 0 || parts[0] == "" {
+	address := r.PathValue("address")
+	if address == "" {
 		writeError(w, ErrCodeInvalidAddress, "Address is required", http.StatusBadRequest)
-		return
-	}
-
-	address := parts[0]
-	if !identity.IsValidAddress(address) {
-		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
-			"provided":        address,
-			"expected_length": 16,
-		})
 		return
 	}
 
@@ -100,25 +127,12 @@ func (h *APIHandler) handleGetInbox(w http.ResponseWriter, r *http.Request) {
 // @Security SignatureAuth
 // @Router /api/inbox/{address}/{emailId} [get]
 func (h *APIHandler) handleGetEmail(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
 
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/inbox/"), "/")
-	if len(parts) < 2 || parts[0] == "" || parts[1] == "" {
+	address := r.PathValue("address")
+	emailID := r.PathValue("emailId")
+
+	if address == "" || emailID == "" {
 		writeError(w, ErrCodeInvalidAddress, "Address and email ID are required", http.StatusBadRequest)
-		return
-	}
-
-	address := parts[0]
-	emailID := parts[1]
-
-	if !identity.IsValidAddress(address) {
-		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
-			"provided":        address,
-			"expected_length": 16,
-		})
 		return
 	}
 
@@ -160,25 +174,11 @@ func (h *APIHandler) handleGetEmail(w http.ResponseWriter, r *http.Request) {
 // @Security SignatureAuth
 // @Router /api/inbox/{address}/{emailId} [delete]
 func (h *APIHandler) handleDeleteEmail(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+	address := r.PathValue("address")
+	emailID := r.PathValue("emailId")
 
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/inbox/"), "/")
-	if len(parts) < 2 || parts[0] == "" || parts[1] == "" {
+	if address == "" || emailID == "" {
 		writeError(w, ErrCodeInvalidAddress, "Address and email ID are required", http.StatusBadRequest)
-		return
-	}
-
-	address := parts[0]
-	emailID := parts[1]
-
-	if !identity.IsValidAddress(address) {
-		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
-			"provided":        address,
-			"expected_length": 16,
-		})
 		return
 	}
 
@@ -209,23 +209,10 @@ func (h *APIHandler) handleDeleteEmail(w http.ResponseWriter, r *http.Request) {
 // @Security SignatureAuth
 // @Router /api/inbox [delete]
 func (h *APIHandler) handleClearInbox(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+	address := r.PathValue("address")
 
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/inbox/"), "/")
-	if len(parts) == 0 || parts[0] == "" {
+	if address == "" {
 		writeError(w, ErrCodeInvalidAddress, "Address is required", http.StatusBadRequest)
-		return
-	}
-
-	address := parts[0]
-	if !identity.IsValidAddress(address) {
-		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
-			"provided":        address,
-			"expected_length": 16,
-		})
 		return
 	}
 
@@ -252,11 +239,6 @@ func (h *APIHandler) handleClearInbox(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} HealthResponse
 // @Router /api/health [get]
 func (h *APIHandler) handleHealth(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		writeError(w, ErrCodeInternalError, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	redisStatus := "connected"
 	if err := h.Store.Ping(r.Context()); err != nil {
 		redisStatus = "disconnected"
