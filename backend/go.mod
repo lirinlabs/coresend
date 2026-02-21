@@ -9,8 +9,6 @@ require (
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.4
-	github.com/tyler-smith/go-bip39 v1.1.0
-	golang.org/x/crypto v0.47.0
 )
 
 require (

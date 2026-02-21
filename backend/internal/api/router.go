@@ -24,9 +24,8 @@ func NewRouter(s store.EmailStore, domain string) http.Handler {
 		KeyPrefix: "delete",
 	}
 
-
-	mux.HandleFunc("/api/inbox/", wrap(handler.handleGetInbox, loggingMiddleware, corsMiddleware, rateLimitMiddleware(s, inboxRateLimit), authMiddleware))
-	mux.HandleFunc("/api/inbox", wrap(handler.handleClearInbox, loggingMiddleware, corsMiddleware, rateLimitMiddleware(s, deleteRateLimit), authMiddleware))
+	mux.HandleFunc("/api/inbox/", wrap(handler.handleGetInbox, loggingMiddleware, corsMiddleware, rateLimitMiddleware(s, inboxRateLimit)))
+	mux.HandleFunc("/api/inbox", wrap(handler.handleClearInbox, loggingMiddleware, corsMiddleware, rateLimitMiddleware(s, deleteRateLimit)))
 	mux.HandleFunc("/api/health", wrap(handler.handleHealth, loggingMiddleware, corsMiddleware))
 	mux.HandleFunc("/docs/", httpSwagger.WrapHandler)
 

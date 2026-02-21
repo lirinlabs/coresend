@@ -71,7 +71,7 @@ func (m *mockEmailStore) Ping(ctx context.Context) error {
 
 func TestGetInbox(t *testing.T) {
 	mockStore := newMockEmailStore()
-	validAddr := "b4ebe3e2200cbc90"
+	validAddr := "b4ebe3e2200cbc901234567890abcdef01234567"
 	mockStore.emails[validAddr] = []store.Email{
 		{ID: "1", From: "sender@example.com", Subject: "Test Email"},
 	}

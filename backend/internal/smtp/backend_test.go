@@ -90,15 +90,15 @@ func TestSession_Rcpt(t *testing.T) {
 	mockStore := &mockStore{}
 	session := &Session{Store: mockStore}
 
-	to := "b4ebe3e2200cbc90@example.com"
+	to := "b4ebe3e2200cbc901234567890abcdef01234567@example.com"
 	err := session.Rcpt(to, nil)
 
 	if err != nil {
 		t.Errorf("Rcpt() error = %v", err)
 	}
 
-	if len(session.To) != 1 || session.To[0] != "b4ebe3e2200cbc90" {
-		t.Errorf("Rcpt() To = %v, want [b4ebe3e2200cbc90]", session.To)
+	if len(session.To) != 1 || session.To[0] != "b4ebe3e2200cbc901234567890abcdef01234567" {
+		t.Errorf("Rcpt() To = %v, want [b4ebe3e2200cbc901234567890abcdef01234567]", session.To)
 	}
 }
 
@@ -107,9 +107,9 @@ func TestSession_Rcpt_Multiple(t *testing.T) {
 	session := &Session{Store: mockStore}
 
 	recipients := []string{
-		"aaaaaaaaaaaaaaaa@example.com",
-		"bbbbbbbbbbbbbbbb@example.com",
-		"cccccccccccccccc@example.com",
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+		"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb@example.com",
+		"cccccccccccccccccccccccccccccccccccccccc@example.com",
 	}
 	for _, to := range recipients {
 		err := session.Rcpt(to, nil)
@@ -122,7 +122,7 @@ func TestSession_Rcpt_Multiple(t *testing.T) {
 		t.Errorf("Rcpt() To has %d recipients, want 3", len(session.To))
 	}
 
-	expectedLocalParts := []string{"aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "cccccccccccccccc"}
+	expectedLocalParts := []string{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "cccccccccccccccccccccccccccccccccccccccc"}
 	for i, expected := range expectedLocalParts {
 		if session.To[i] != expected {
 			t.Errorf("Rcpt() To[%d] = %v, want %v", i, session.To[i], expected)
@@ -158,7 +158,7 @@ func TestSession_Reset(t *testing.T) {
 	session := &Session{
 		Store: mockStore,
 		From:  "sender@example.com",
-		To:    []string{"b4ebe3e2200cbc90"},
+		To:    []string{"b4ebe3e2200cbc901234567890abcdef01234567"},
 	}
 
 	session.Reset()
@@ -188,11 +188,11 @@ func TestSession_Data(t *testing.T) {
 	session := &Session{
 		Store: mockStore,
 		From:  "sender@example.com",
-		To:    []string{"b4ebe3e2200cbc90"},
+		To:    []string{"b4ebe3e2200cbc901234567890abcdef01234567"},
 	}
 
 	emailData := `From: sender@example.com
-To: b4ebe3e2200cbc90@example.com
+To: b4ebe3e2200cbc901234567890abcdef01234567@example.com
 Subject: Test Subject
 Content-Type: text/plain; charset=UTF-8
 
@@ -212,8 +212,8 @@ Test email body`
 		t.Errorf("Data() saved From = %v, want %v", savedEmail.From, "sender@example.com")
 	}
 
-	if len(savedEmail.To) != 1 || savedEmail.To[0] != "b4ebe3e2200cbc90" {
-		t.Errorf("Data() saved To = %v, want [b4ebe3e2200cbc90]", savedEmail.To)
+	if len(savedEmail.To) != 1 || savedEmail.To[0] != "b4ebe3e2200cbc901234567890abcdef01234567" {
+		t.Errorf("Data() saved To = %v, want [b4ebe3e2200cbc901234567890abcdef01234567]", savedEmail.To)
 	}
 
 	if savedEmail.Subject != "Test Subject" {
@@ -224,8 +224,8 @@ Test email body`
 		t.Errorf("Data() saved Body = %v, want %v", savedEmail.Body, "Test email body")
 	}
 
-	if mockStore.savedTo[0] != "b4ebe3e2200cbc90" {
-		t.Errorf("Data() saved to addressBox = %v, want %v", mockStore.savedTo[0], "b4ebe3e2200cbc90")
+	if mockStore.savedTo[0] != "b4ebe3e2200cbc901234567890abcdef01234567" {
+		t.Errorf("Data() saved to addressBox = %v, want %v", mockStore.savedTo[0], "b4ebe3e2200cbc901234567890abcdef01234567")
 	}
 }
 
@@ -234,11 +234,11 @@ func TestSession_Data_HTML(t *testing.T) {
 	session := &Session{
 		Store: mockStore,
 		From:  "sender@example.com",
-		To:    []string{"b4ebe3e2200cbc90"},
+		To:    []string{"b4ebe3e2200cbc901234567890abcdef01234567"},
 	}
 
 	emailData := `From: sender@example.com
-To: b4ebe3e2200cbc90@example.com
+To: b4ebe3e2200cbc901234567890abcdef01234567@example.com
 Subject: HTML Test
 Content-Type: text/html; charset=UTF-8
 
@@ -265,11 +265,11 @@ func TestSession_Data_MultiPart(t *testing.T) {
 	session := &Session{
 		Store: mockStore,
 		From:  "sender@example.com",
-		To:    []string{"b4ebe3e2200cbc90"},
+		To:    []string{"b4ebe3e2200cbc901234567890abcdef01234567"},
 	}
 
 	emailData := `From: sender@example.com
-To: b4ebe3e2200cbc90@example.com
+To: b4ebe3e2200cbc901234567890abcdef01234567@example.com
 Subject: Multipart Test
 MIME-Version: 1.0
 Content-Type: multipart/alternative; boundary="boundary123"
@@ -307,7 +307,7 @@ func TestSession_Data_InvalidEmail(t *testing.T) {
 	session := &Session{
 		Store: mockStore,
 		From:  "sender@example.com",
-		To:    []string{"b4ebe3e2200cbc90"},
+		To:    []string{"b4ebe3e2200cbc901234567890abcdef01234567"},
 	}
 
 	invalidEmailData := `Invalid email content without proper headers`
@@ -323,11 +323,11 @@ func TestSession_Data_EmptyBody(t *testing.T) {
 	session := &Session{
 		Store: mockStore,
 		From:  "sender@example.com",
-		To:    []string{"b4ebe3e2200cbc90"},
+		To:    []string{"b4ebe3e2200cbc901234567890abcdef01234567"},
 	}
 
 	emailData := `From: sender@example.com
-To: b4ebe3e2200cbc90@example.com
+To: b4ebe3e2200cbc901234567890abcdef01234567@example.com
 Subject: Empty Body Test
 Content-Type: text/plain; charset=UTF-8
 
@@ -353,11 +353,11 @@ func TestSession_Data_MultipleRecipients(t *testing.T) {
 	session := &Session{
 		Store: mockStore,
 		From:  "sender@example.com",
-		To:    []string{"aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "cccccccccccccccc"},
+		To:    []string{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "cccccccccccccccccccccccccccccccccccc"},
 	}
 
 	emailData := `From: sender@example.com
-To: aaaaaaaaaaaaaaaa@example.com, bbbbbbbbbbbbbbbb@example.com, cccccccccccccccc@example.com
+To: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com, bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb@example.com, ccccccccccccccccccccccccccccccccccccc@example.com
 Subject: Multi-recipient Test
 Content-Type: text/plain; charset=UTF-8
 
@@ -372,7 +372,7 @@ Test body`
 		t.Fatalf("Data() saved %d emails, want 3 (one per recipient)", len(mockStore.savedEmails))
 	}
 
-	expectedRecipients := []string{"aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "cccccccccccccccc"}
+	expectedRecipients := []string{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "cccccccccccccccccccccccccccccccccccc"}
 	for i, expected := range expectedRecipients {
 		if mockStore.savedTo[i] != expected {
 			t.Errorf("Data() savedTo[%d] = %v, want %v", i, mockStore.savedTo[i], expected)
