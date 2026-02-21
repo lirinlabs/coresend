@@ -10,6 +10,7 @@ import {
 } from '@/lib/crypto/validateMnemonic';
 import { useNavigate } from 'react-router-dom';
 import { useRegister } from '@/hooks/useRegister';
+import { useIdentityStore } from '@/lib/stores/identityStore';
 
 const WORD_COUNT = 12;
 const ENTROPY_BITS = 128;
@@ -50,6 +51,8 @@ const Gateway = () => {
             const mnemonic = seedWords.join(' ').trim();
 
             const identity = deriveIdentityFromMnemonic(mnemonic);
+
+            useIdentityStore.getState().setIdentity(identity);
 
             await register({ address: identity.address });
 
