@@ -1,0 +1,19 @@
+/* TEAM */
+  Project Lead: Lirin Labs
+  Contact: https://github.com/lirinlabs/coresend/
+
+/* SITE */
+  Last update: 2026/02/21
+  Language: English
+  Doctype: HTML5
+  Standards: HTML5, CSS3, JavaScript (TypeScript)
+
+/* TECH */
+  Powered by: React, Vite, TypeScript
+  State: Stateless (no database)
+  Encryption: BIP39 deterministic logic
+  Backend: Redis, Golang
+  License: AGPL-3.0
+
+/* PATH */
+  Source: https://github.com/lirinlabs/coresend/

@@ -1,0 +1,49 @@
+{
+    "name": "Coresend - Stateless Temporary Email",
+    "short_name": "Coresend",
+    "description": "Stateless temporary email powered by BIP39 deterministic logic. 24h TTL, no database, no signup.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#FF5500",
+    "orientation": "portrait",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/Logo-PWA.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "/Logo-IOS.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/Logo-GOOGLE.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "badge"
+        }
+    ],
+    "categories": ["utilities", "productivity"],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "Open Inbox",
+            "short_name": "Inbox",
+            "description": "View your temporary inbox",
+            "url": "/inbox",
+            "icons": [{ "src": "/Logo-PWA.svg", "sizes": "96x96" }]
+        },
+        {
+            "name": "New Gateway",
+            "short_name": "Gateway",
+            "description": "Create a new inbox address",
+            "url": "/gateway",
+            "icons": [{ "src": "/Logo-PWA.svg", "sizes": "96x96" }]
+        }
+    ]
+}
