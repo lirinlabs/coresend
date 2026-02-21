@@ -10,11 +10,13 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = {
     theme: Theme;
+    resolvedTheme: 'dark' | 'light';
     setTheme: (theme: Theme) => void;
 };
 
 const initialState: ThemeProviderState = {
     theme: 'system',
+    resolvedTheme: 'light',
     setTheme: () => null,
 };
 
@@ -29,6 +31,13 @@ export function ThemeProvider({
     const [theme, setTheme] = useState<Theme>(
         () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
     );
+
+    const resolvedTheme =
+        theme === 'system'
+            ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+            : theme;
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -51,6 +60,7 @@ export function ThemeProvider({
 
     const value = {
         theme,
+        resolvedTheme,
         setTheme: (theme: Theme) => {
             localStorage.setItem(storageKey, theme);
             setTheme(theme);
