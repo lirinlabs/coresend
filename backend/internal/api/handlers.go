@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fn-jakubkarp/coresend/internal/identity"
 	"github.com/fn-jakubkarp/coresend/internal/store"
 
 	_ "github.com/fn-jakubkarp/coresend/docs"
@@ -48,13 +47,6 @@ func (h *APIHandler) handleGetInbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	address := parts[0]
-	if !identity.IsValidAddress(address) {
-		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
-			"provided":        address,
-			"expected_length": 16,
-		})
-		return
-	}
 
 	emails, err := h.Store.GetEmails(r.Context(), address)
 	if err != nil {
@@ -114,14 +106,6 @@ func (h *APIHandler) handleGetEmail(w http.ResponseWriter, r *http.Request) {
 	address := parts[0]
 	emailID := parts[1]
 
-	if !identity.IsValidAddress(address) {
-		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
-			"provided":        address,
-			"expected_length": 16,
-		})
-		return
-	}
-
 	email, err := h.Store.GetEmail(r.Context(), address, emailID)
 	if err != nil {
 		log.Printf("Error getting email: %v", err)
@@ -174,14 +158,6 @@ func (h *APIHandler) handleDeleteEmail(w http.ResponseWriter, r *http.Request) {
 	address := parts[0]
 	emailID := parts[1]
 
-	if !identity.IsValidAddress(address) {
-		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
-			"provided":        address,
-			"expected_length": 16,
-		})
-		return
-	}
-
 	err := h.Store.DeleteEmail(r.Context(), address, emailID)
 	if err != nil {
 		log.Printf("Error deleting email: %v", err)
@@ -221,13 +197,6 @@ func (h *APIHandler) handleClearInbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	address := parts[0]
-	if !identity.IsValidAddress(address) {
-		writeErrorWithDetails(w, ErrCodeInvalidAddress, "Invalid address format", http.StatusBadRequest, map[string]interface{}{
-			"provided":        address,
-			"expected_length": 16,
-		})
-		return
-	}
 
 	count, err := h.Store.ClearInbox(r.Context(), address)
 	if err != nil {
