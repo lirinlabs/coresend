@@ -1,5 +1,10 @@
 package api
 
+type RegisterResponse struct {
+	Registered bool   `json:"registered"`
+	Address    string `json:"address"`
+	ExpiresIn  int    `json:"expires_in"`
+}
 type EmailResponse struct {
 	ID         string   `json:"id"`
 	From       string   `json:"from"`
