@@ -50,6 +50,7 @@ func (s *Session) Rcpt(to string, opts *gosmtp.RcptOptions) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	isValid, err := s.Store.IsAddressActive(ctx, localPart)
 	if err != nil {
 		log.Printf("Redis error checking address %s: %v", localPart, err)
@@ -136,7 +137,11 @@ func (s *Session) Data(r io.Reader) error {
 	// Save email to each recipient's inbox
 	var lastErr error
 	for _, recipient := range s.To {
-		if err := s.Store.SaveEmail(context.Background(), recipient, email); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		err := s.Store.SaveEmail(ctx, recipient, email)
+		cancel()
+
+		if err != nil {
 			log.Printf("Error saving email for %s: %v", recipient, err)
 			lastErr = err
 		}
