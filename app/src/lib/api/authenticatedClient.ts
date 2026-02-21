@@ -1,0 +1,53 @@
+import { signRequest } from '../crypto/signRequest';
+import { useIdentityStore } from '../stores/identityStore';
+
+export const customFetch = async <T>(
+    url: string,
+    options?: RequestInit,
+): Promise<T> => {
+    const identity = useIdentityStore.getState().identity;
+
+    if (!identity) {
+        throw new Error('No identity - please unlock inbox first');
+    }
+
+    let body: string | undefined;
+    if (options?.body !== undefined && options?.body !== null) {
+        if (typeof options.body === 'string') {
+            body = options.body;
+        } else if (
+            options.body instanceof FormData ||
+            options.body instanceof Blob
+        ) {
+            throw new Error(
+                'FormData and Blob body types are not supported for signature authentication',
+            );
+        } else {
+            throw new Error(`Unsupported body type: ${typeof options.body}`);
+        }
+    }
+    const path = new URL(url, window.location.origin).pathname;
+    const method = options?.method || 'GET';
+
+    const authHeaders: Record<string, string> = signRequest({
+        method,
+        path,
+        body,
+        privateKey: identity.privateKey,
+        publicKey: identity.publicKey,
+    });
+
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...options?.headers,
+            ...authHeaders,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json() as Promise<T>;
+};

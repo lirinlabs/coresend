@@ -21,6 +21,10 @@ export default defineConfig({
                     useInfinite: true,
                     useInfiniteQueryParam: 'nextPage',
                 },
+                mutator: {
+                    path: './src/lib/api/authenticatedClient.ts',
+                    name: 'customFetch',
+                },
             },
         },
     },
