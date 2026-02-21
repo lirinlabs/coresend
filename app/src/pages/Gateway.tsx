@@ -56,14 +56,6 @@ const Gateway = () => {
 
             await register({ address: identity.address });
 
-            sessionStorage.setItem(
-                'identity',
-                JSON.stringify({
-                    address: identity.address,
-                    publicKey: Array.from(identity.publicKey),
-                }),
-            );
-
             navigate('/inbox');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to register');

@@ -46,7 +46,15 @@ export const customFetch = async <T>(
     });
 
     if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+            const errorBody = await response.json();
+            if (errorBody?.error?.message) {
+                errorMessage = `${errorMessage} - ${errorBody.error.message}`;
+            }
+        } catch {
+            throw new Error(errorMessage);
+        }
     }
 
     return response.json() as Promise<T>;

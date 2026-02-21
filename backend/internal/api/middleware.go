@@ -86,7 +86,6 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 			nonce,
 		)
 		w.Header().Set("Content-Security-Policy", csp)
-		w.Header().Set("X-CSP-Nonce", nonce)
 
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "DENY")
@@ -102,7 +101,8 @@ func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Public-Key, X-Signature, X-Timestamp, X-Nonce, X-CSP-Nonce")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Public-Key, X-Signature, X-Timestamp, X-Nonce")
+		// TODO: restrict to actual domain in production
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -179,6 +179,10 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 			derivedAddress := hex.EncodeToString(hash[:])[:40]
 
 			address := r.PathValue("address")
+			if address == "" {
+				writeError(w, ErrCodeUnauthorized, "Missing address parameter", http.StatusBadRequest)
+				return
+			}
 			if address != derivedAddress {
 				writeError(w, ErrCodeUnauthorized, "Access denied: address does not match public key", http.StatusForbidden)
 				return
@@ -229,7 +233,7 @@ func serveStatic(staticDir string) http.HandlerFunc {
 			content, err := os.ReadFile(filePath)
 			if err != nil {
 				log.Printf("Failed to read index.html: %v", err)
-				staticFs.ServeHTTP(w, r)
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
 
