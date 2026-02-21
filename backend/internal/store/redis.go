@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,7 +62,7 @@ func (s *Store) SaveEmail(ctx context.Context, addressBox string, email Email) e
 	zKey := fmt.Sprintf("inbox:%s", addressBox)
 	hKey := fmt.Sprintf("emails:%s", addressBox)
 
-	now := float64(time.Now().UnixNano())
+	now := float64(time.Now().Unix())
 
 	pipe := s.client.Pipeline()
 
@@ -99,20 +100,24 @@ func (s *Store) GetEmails(ctx context.Context, addressBox string) ([]Email, erro
 	}
 
 	emails := make([]Email, 0, len(rawData))
-	for _, item := range rawData {
+	for i, item := range rawData {
 		if item == nil {
-			continue // Skip if a payload went missing
+			slog.Warn("Skipping nil email data", "index", i, "id", ids[i])
+			continue
 		}
 
 		strData, ok := item.(string)
 		if !ok {
+			slog.Warn("Skipping email with invalid type", "index", i, "id", ids[i])
 			continue
 		}
 
 		var email Email
-		if err := json.Unmarshal([]byte(strData), &email); err == nil {
-			emails = append(emails, email)
+		if err := json.Unmarshal([]byte(strData), &email); err != nil {
+			slog.Warn("Skipping unmarshalable email", "index", i, "id", ids[i], "error", err)
+			continue
 		}
+		emails = append(emails, email)
 	}
 
 	return emails, nil
@@ -159,13 +164,19 @@ func (s *Store) ClearInbox(ctx context.Context, addressBox string) (int64, error
 func (s *Store) CheckRateLimit(ctx context.Context, key string, limit int, window time.Duration) (bool, int, error) {
 	key = fmt.Sprintf("ratelimit:%s", key)
 
-	count, err := s.client.Incr(ctx, key).Result()
+	var count int64
+	ok, err := s.client.SetNX(ctx, key, 1, window).Result()
 	if err != nil {
 		return false, 0, err
 	}
 
-	if count == 1 {
-		s.client.Expire(ctx, key, window)
+	if ok {
+		count = 1
+	} else {
+		count, err = s.client.Incr(ctx, key).Result()
+		if err != nil {
+			return false, 0, err
+		}
 	}
 
 	remaining := limit - int(count)
