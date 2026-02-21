@@ -1,7 +1,9 @@
 package api
 
-import "encoding/json"
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+)
 
 const (
 	ErrCodeInvalidAddress     = "INVALID_ADDRESS"
@@ -20,19 +22,6 @@ func writeError(w http.ResponseWriter, code string, message string, httpStatus i
 		Error: ErrorDetails{
 			Code:    code,
 			Message: message,
-		},
-	}
-	json.NewEncoder(w).Encode(resp)
-}
-
-func writeErrorWithDetails(w http.ResponseWriter, code string, message string, httpStatus int, details map[string]interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(httpStatus)
-	resp := ErrorResponse{
-		Error: ErrorDetails{
-			Code:    code,
-			Message: message,
-			Details: details,
 		},
 	}
 	json.NewEncoder(w).Encode(resp)

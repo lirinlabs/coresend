@@ -30,6 +30,7 @@ type EmailStore interface {
 	RegisterAddress(ctx context.Context, addressBox string, duration time.Duration) error
 	IsAddressActive(ctx context.Context, addressBox string) (bool, error)
 	Ping(ctx context.Context) error
+	CheckAndStoreNonce(ctx context.Context, nonce string, ttl time.Duration) (bool, error)
 }
 
 type Store struct {
@@ -201,4 +202,9 @@ func (s *Store) IsAddressActive(ctx context.Context, addressBox string) (bool, e
 	}
 
 	return exists > 0, nil
+}
+
+func (s *Store) CheckAndStoreNonce(ctx context.Context, nonce string, ttl time.Duration) (bool, error) {
+	key := fmt.Sprintf("nonce:%s", nonce)
+	return s.client.SetNX(ctx, key, "1", ttl).Result()
 }

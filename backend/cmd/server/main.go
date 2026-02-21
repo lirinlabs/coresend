@@ -37,6 +37,7 @@ func main() {
 	domain := getEnv("DOMAIN_NAME", "localhost")
 	smtpListenAddr := getEnv("SMTP_LISTEN_ADDR", ":1025")
 	httpListenAddr := getEnv("HTTP_LISTEN_ADDR", ":8080")
+	staticDir := getEnv("STATIC_DIR", "./app/dist")
 	certPath := os.Getenv("SMTP_CERT_PATH")
 	keyPath := os.Getenv("SMTP_KEY_PATH")
 
@@ -77,7 +78,7 @@ func main() {
 		log.Println("TLS certificates not configured, running without STARTTLS")
 	}
 
-	apiRouter := api.NewRouter(emailStore, domain)
+	apiRouter := api.NewRouter(emailStore, domain, staticDir)
 	httpServer := &http.Server{
 		Addr:         httpListenAddr,
 		Handler:      apiRouter,

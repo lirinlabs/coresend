@@ -23,15 +23,15 @@ func NewAPIHandler(s store.EmailStore, domain string) *APIHandler {
 	}
 }
 
+// @ID registerAddress
 // @Summary Register address for inbound mail
-// @Description Register a derived address to actively receive emails for the next 24 hours
+// @Description Register a derived hex address to receive emails for the next 24 hours
 // @Tags inbox
-// @Accept json
+// @Param address path string true "Hex-encoded address to register"
 // @Produce json
-// @Param address path string true "Address to register"
 // @Success 200 {object} RegisterResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 400 {object} ErrorResponse "Invalid address format or missing address"
+// @Failure 500 {object} ErrorResponse "Internal server error"
 // @Security SignatureAuth
 // @Router /api/register/{address} [post]
 func (h *APIHandler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -65,10 +65,10 @@ func (h *APIHandler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @ID getInbox
 // @Summary Get inbox emails
 // @Description Retrieve all emails for a specific address
 // @Tags inbox
-// @Accept json
 // @Produce json
 // @Param address path string true "Address to retrieve emails for"
 // @Success 200 {object} InboxResponse
@@ -113,10 +113,10 @@ func (h *APIHandler) handleGetInbox(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @ID getEmail
 // @Summary Get single email
 // @Description Retrieve a specific email by ID for an address
 // @Tags inbox
-// @Accept json
 // @Produce json
 // @Param address path string true "Address"
 // @Param emailId path string true "Email ID"
@@ -161,10 +161,10 @@ func (h *APIHandler) handleGetEmail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @ID deleteEmail
 // @Summary Delete single email
 // @Description Delete a specific email by ID for an address
 // @Tags inbox
-// @Accept json
 // @Produce json
 // @Param address path string true "Address"
 // @Param emailId path string true "Email ID"
@@ -198,16 +198,17 @@ func (h *APIHandler) handleDeleteEmail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @ID clearInbox
 // @Summary Clear entire inbox
 // @Description Delete all emails for a specific address
 // @Tags inbox
-// @Accept json
 // @Produce json
+// @Param address path string true "Address to clear inbox for"
 // @Success 200 {object} DeleteResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Security SignatureAuth
-// @Router /api/inbox [delete]
+// @Router /api/inbox/{address} [delete]
 func (h *APIHandler) handleClearInbox(w http.ResponseWriter, r *http.Request) {
 	address := r.PathValue("address")
 
@@ -232,11 +233,13 @@ func (h *APIHandler) handleClearInbox(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// @ID healthCheck
 // @Summary Health check
 // @Description Check API and services health status
 // @Tags health
 // @Produce json
 // @Success 200 {object} HealthResponse
+// @Failure 503 {object} ErrorResponse "Service unavailable - Redis disconnected"
 // @Router /api/health [get]
 func (h *APIHandler) handleHealth(w http.ResponseWriter, r *http.Request) {
 	redisStatus := "connected"
@@ -252,12 +255,13 @@ func (h *APIHandler) handleHealth(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	if redisStatus != "connected" {
 		w.WriteHeader(http.StatusServiceUnavailable)
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }
