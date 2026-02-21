@@ -10,7 +10,6 @@ import (
 
 	"github.com/emersion/go-message/mail"
 	gosmtp "github.com/emersion/go-smtp"
-	"github.com/fn-jakubkarp/coresend/internal/identity"
 	"github.com/fn-jakubkarp/coresend/internal/store"
 )
 
@@ -37,17 +36,38 @@ func (s *Session) Mail(from string, opts *gosmtp.MailOptions) error {
 func (s *Session) Rcpt(to string, opts *gosmtp.RcptOptions) error {
 	log.Printf("RCPT TO: %s", to)
 
-	localPart := extractLocalPart(to)
-	if !identity.IsValidAddress(localPart) {
-		log.Printf("Rejected invalid address: %s", to)
+	localPart := strings.ToLower(extractLocalPart(to))
+
+	if !isValidHexAddress(localPart) {
+		log.Printf("Rejected malformed address: %s", to)
 		return &gosmtp.SMTPError{
 			Code:         550,
 			EnhancedCode: gosmtp.EnhancedCode{5, 1, 1},
-			Message:      "Mailbox does not exist",
+			Message:      "Invalid address format",
 		}
 	}
 
-	s.To = append(s.To, strings.ToLower(localPart))
+	ctx := context.Background()
+	isValid, err := s.Store.IsAddressActive(ctx, localPart)
+	if err != nil {
+		log.Printf("Redis error checking address %s: %v", localPart, err)
+		return &gosmtp.SMTPError{
+			Code:         451,
+			EnhancedCode: gosmtp.EnhancedCode{4, 3, 0},
+			Message:      "Temporary server error, please try again later",
+		}
+	}
+
+	if !isValid {
+		log.Printf("Rejected inactive address: %s", to)
+		return &gosmtp.SMTPError{
+			Code:         550,
+			EnhancedCode: gosmtp.EnhancedCode{5, 1, 1},
+			Message:      "Mailbox does not exist or is currently inactive",
+		}
+	}
+
+	s.To = append(s.To, localPart)
 	return nil
 }
 
@@ -56,6 +76,21 @@ func extractLocalPart(email string) string {
 		return email[:idx]
 	}
 	return email
+}
+
+func isValidHexAddress(s string) bool {
+	if len(s) != 40 {
+		return false
+	}
+
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (s *Session) Data(r io.Reader) error {
