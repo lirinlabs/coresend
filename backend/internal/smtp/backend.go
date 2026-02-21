@@ -11,6 +11,7 @@ import (
 	"github.com/emersion/go-message/mail"
 	gosmtp "github.com/emersion/go-smtp"
 	"github.com/fn-jakubkarp/coresend/internal/store"
+	"github.com/fn-jakubkarp/coresend/internal/validator"
 )
 
 type Backend struct {
@@ -38,7 +39,7 @@ func (s *Session) Rcpt(to string, opts *gosmtp.RcptOptions) error {
 
 	localPart := strings.ToLower(extractLocalPart(to))
 
-	if !isValidHexAddress(localPart) {
+	if !validator.IsValidHexAddress(localPart) {
 		log.Printf("Rejected malformed address: %s", to)
 		return &gosmtp.SMTPError{
 			Code:         550,
@@ -76,21 +77,6 @@ func extractLocalPart(email string) string {
 		return email[:idx]
 	}
 	return email
-}
-
-func isValidHexAddress(s string) bool {
-	if len(s) != 40 {
-		return false
-	}
-
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
-			return false
-		}
-	}
-
-	return true
 }
 
 func (s *Session) Data(r io.Reader) error {
