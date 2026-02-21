@@ -8,12 +8,10 @@ interface LogoProps {
 
 export const Logo = ({ navigate }: LogoProps) => {
     const nav = useNavigate();
-    const { theme } = useTheme();
+    const { resolvedTheme } = useTheme();
 
     const logoSrc =
-        theme === 'dark'
-            ? '/src/assets/Logo-FFF.svg'
-            : '/src/assets/Logo-F50.svg';
+        resolvedTheme === 'dark' ? '/Logo-FFF.svg' : '/Logo-F50.svg';
 
     const logoContent = (
         <div className='flex items-center gap-3'>
