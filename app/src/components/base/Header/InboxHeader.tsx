@@ -8,22 +8,18 @@ import Typography from '../Typography/typography';
 import { ActionIcon } from '../ActionIcon';
 import { SettingsMenu } from '../SettingsMenu/SettingsMenu';
 import { copyToClipboard } from '@/lib/utils';
+import { useIdentityStore } from '@/lib/stores/identityStore';
 
 export const InboxHeader = () => {
     const [isCopied, setIsCopied] = useState(false);
     const timeoutRef = useRef<number | null>(null);
+    const identity = useIdentityStore((state) => state.identity);
 
     const getEmailAddress = () => {
-        const identity = sessionStorage.getItem('identity');
         if (identity) {
-            try {
-                const { address } = JSON.parse(identity);
-                const fullAddress = `${address}@coresend.io`;
-                const truncated = `${address.slice(0, 4)}...${address.slice(-4)}@coresend.io`;
-                return { fullAddress, displayAddress: truncated };
-            } catch {
-                console.error('Failed to parse identity from sessionStorage');
-            }
+            const fullAddress = `${identity.address}@coresend.io`;
+            const truncated = `${identity.address.slice(0, 4)}...${identity.address.slice(-4)}@coresend.io`;
+            return { fullAddress, displayAddress: truncated };
         }
         const fallback = '4df1234567890432C@coresend.io';
         return {
