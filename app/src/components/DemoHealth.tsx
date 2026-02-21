@@ -1,33 +1,36 @@
-import { useGetApiHealth } from '@/api/generated';
+import { useHealth } from '@/hooks/useHealth';
 
 export function DemoHealth() {
-    const { data, isLoading, error } = useGetApiHealth();
+    const { data, isPending, isError, error } = useHealth();
 
-    if (isLoading) return <p>Loading...</p>;
-    if (error)
+    if (isPending)
         return (
-            <p>
+            <p className='text-xs text-muted-foreground'>
+                Checking API health...
+            </p>
+        );
+
+    if (isError)
+        return (
+            <p className='text-xs text-destructive'>
                 Error:{' '}
                 {error instanceof Error ? error.message : 'Unknown error'}
             </p>
         );
 
-    const healthData = data?.data;
-
     return (
-        <div className='p-4 border rounded-lg'>
-            <h3 className='font-semibold mb-2'>API Health</h3>
-            <p>Status: {healthData?.status}</p>
-            <p>Services:</p>
-            <ul className='list-disc pl-5'>
-                {healthData?.services &&
-                    Object.entries(healthData.services).map(
-                        ([name, status]) => (
-                            <li key={name}>
-                                {name}: {status}
-                            </li>
-                        ),
-                    )}
+        <div className='w-full max-w-xl rounded-lg border border-border bg-card p-4'>
+            <h3 className='mb-2 text-sm font-semibold'>API health</h3>
+            <p className='text-xs text-muted-foreground'>
+                Status: {data?.status ?? 'unknown'}
+            </p>
+            <ul className='mt-2 list-disc pl-5 text-xs text-muted-foreground'>
+                {data?.services &&
+                    Object.entries(data.services).map(([name, status]) => (
+                        <li key={name}>
+                            {name}: {status}
+                        </li>
+                    ))}
             </ul>
         </div>
     );

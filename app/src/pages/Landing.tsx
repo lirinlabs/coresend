@@ -3,6 +3,7 @@ import Button from '@/components/base/Button/Button';
 import Typography from '@/components/base/Typography/typography';
 import { Footer } from '@/components/base/Footer/Footer';
 import { Header } from '@/components/base/Header/Header';
+import { DemoHealth } from '@/components/DemoHealth';
 
 const Landing = () => {
     const navigate = useNavigate();
@@ -64,6 +65,9 @@ const Landing = () => {
                     >
                         ENTER GATEWAY
                     </Button>
+                    <div className='mt-6 flex w-full justify-center'>
+                        <DemoHealth />
+                    </div>
                 </div>
             </div>
             <Footer />
