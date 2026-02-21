@@ -48,7 +48,8 @@ func (s *Session) Rcpt(to string, opts *gosmtp.RcptOptions) error {
 		}
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	isValid, err := s.Store.IsAddressActive(ctx, localPart)
 	if err != nil {
 		log.Printf("Redis error checking address %s: %v", localPart, err)
