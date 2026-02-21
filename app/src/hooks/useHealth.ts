@@ -1,7 +1,7 @@
-import { type ApiHealthResponse, useGetApiHealth } from '@/api/generated';
+import { useHealthCheck } from '@/api/generated';
 
 export const useHealth = () =>
-    useGetApiHealth<ApiHealthResponse>({
+    useHealthCheck({
         query: {
             select: (response) => response.data,
             staleTime: 30_000,
