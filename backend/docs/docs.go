@@ -345,7 +345,7 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "example": [
-                        "[\"0x123abc@coresend.dev\"]"
+                        "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev"
                     ]
                 }
             }
@@ -382,10 +382,6 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": {
                         "type": "string"
-                    },
-                    "example": {
-                        "\"smtp\"": "\"running\"}",
-                        "{\"redis\"": "\"connected\""
                     }
                 },
                 "status": {
@@ -399,7 +395,7 @@ const docTemplate = `{
             "properties": {
                 "address": {
                     "type": "string",
-                    "example": "0x123abc"
+                    "example": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
                 },
                 "count": {
                     "type": "integer",
@@ -407,7 +403,7 @@ const docTemplate = `{
                 },
                 "email": {
                     "type": "string",
-                    "example": "0x123abc@coresend.dev"
+                    "example": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev"
                 },
                 "emails": {
                     "type": "array",
@@ -427,7 +423,7 @@ const docTemplate = `{
             "properties": {
                 "address": {
                     "type": "string",
-                    "example": "0x123abc"
+                    "example": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
                 },
                 "expires_in": {
                     "type": "integer",

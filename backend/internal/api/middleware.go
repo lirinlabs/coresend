@@ -152,17 +152,6 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 				return
 			}
 
-			unique, err := s.CheckAndStoreNonce(r.Context(), nonce, 5*time.Minute)
-			if err != nil {
-				log.Printf("Nonce check error: %v", err)
-				writeError(w, ErrCodeInternalError, "Failed to verify nonce", http.StatusInternalServerError)
-				return
-			}
-			if !unique {
-				writeError(w, ErrCodeUnauthorized, "Nonce already used", http.StatusUnauthorized)
-				return
-			}
-
 			pubKeyBytes, err := hex.DecodeString(pubKeyHex)
 			if err != nil || len(pubKeyBytes) != ed25519.PublicKeySize {
 				writeError(w, ErrCodeUnauthorized, "Invalid public key format", http.StatusUnauthorized)
@@ -205,9 +194,42 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 				return
 			}
 
+			unique, err := s.CheckAndStoreNonce(r.Context(), nonce, 5*time.Minute)
+			if err != nil {
+				log.Printf("Nonce check error: %v", err)
+				writeError(w, ErrCodeInternalError, "Failed to verify nonce", http.StatusInternalServerError)
+				return
+			}
+			if !unique {
+				writeError(w, ErrCodeUnauthorized, "Nonce already used", http.StatusUnauthorized)
+				return
+			}
+
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func serveIndexWithNonce(w http.ResponseWriter, r *http.Request, staticDir string) {
+	nonce, ok := r.Context().Value(NonceContextKey).(string)
+	if !ok {
+		log.Println("Missing nonce in request context")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	filePath := staticDir + "/index.html"
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		log.Printf("Failed to read index.html: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	html := strings.ReplaceAll(string(content), `__CSP_NONCE__`, nonce)
+	w.Write([]byte(html))
 }
 
 func serveStatic(staticDir string) http.HandlerFunc {
@@ -220,27 +242,13 @@ func serveStatic(staticDir string) http.HandlerFunc {
 		}
 
 		if path == "/index.html" {
-			nonce, ok := r.Context().Value(NonceContextKey).(string)
-			if !ok {
-				log.Println("Missing nonce in request context")
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
-				return
-			}
+			serveIndexWithNonce(w, r, staticDir)
+			return
+		}
 
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-			filePath := staticDir + "/index.html"
-			content, err := os.ReadFile(filePath)
-			if err != nil {
-				log.Printf("Failed to read index.html: %v", err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
-				return
-			}
-
-			html := string(content)
-
-			html = strings.ReplaceAll(html, `__CSP_NONCE__`, nonce)
-			w.Write([]byte(html))
+		filePath := staticDir + path
+		if _, err := os.Stat(filePath); err != nil {
+			serveIndexWithNonce(w, r, staticDir)
 			return
 		}
 

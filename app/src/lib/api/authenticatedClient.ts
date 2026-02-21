@@ -37,12 +37,14 @@ export const customFetch = async <T>(
         publicKey: identity.publicKey,
     });
 
+    const mergedHeaders = new Headers(options?.headers as HeadersInit);
+    for (const [k, v] of Object.entries(authHeaders)) {
+        mergedHeaders.set(k, v);
+    }
+
     const response = await fetch(url, {
         ...options,
-        headers: {
-            ...options?.headers,
-            ...authHeaders,
-        },
+        headers: mergedHeaders,
     });
 
     if (!response.ok) {
@@ -52,10 +54,10 @@ export const customFetch = async <T>(
             if (errorBody?.error?.message) {
                 errorMessage = `${errorMessage} - ${errorBody.error.message}`;
             }
-        } catch {
-            throw new Error(errorMessage);
-        }
+        } catch {}
+        throw new Error(errorMessage);
     }
 
-    return response.json() as Promise<T>;
+    const data = await response.json();
+    return { data, status: response.status, headers: response.headers } as T;
 };
