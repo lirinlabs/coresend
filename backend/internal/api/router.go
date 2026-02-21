@@ -12,22 +12,18 @@ func NewRouter(s store.EmailStore, domain string) http.Handler {
 	handler := NewAPIHandler(s, domain)
 	mux := http.NewServeMux()
 
-	inboxRateLimit := RateLimitConfig{
-		Limit:     60,
-		Window:    time.Minute,
-		KeyPrefix: "inbox",
-	}
+	inboxLimit := RateLimitConfig{Limit: 60, Window: time.Minute, KeyPrefix: "inbox"}
+	deleteLimit := RateLimitConfig{Limit: 30, Window: time.Minute, KeyPrefix: "delete"}
 
-	deleteRateLimit := RateLimitConfig{
-		Limit:     30,
-		Window:    time.Minute,
-		KeyPrefix: "delete",
-	}
+	mux.HandleFunc("POST /api/register/{address}", wrap(handler.handleRegister, loggingMiddleware, corsMiddleware, signatureAuthMiddleware))
 
-	mux.HandleFunc("/api/inbox/", wrap(handler.handleGetInbox, loggingMiddleware, corsMiddleware, rateLimitMiddleware(s, inboxRateLimit)))
-	mux.HandleFunc("/api/inbox", wrap(handler.handleClearInbox, loggingMiddleware, corsMiddleware, rateLimitMiddleware(s, deleteRateLimit)))
-	mux.HandleFunc("/api/health", wrap(handler.handleHealth, loggingMiddleware, corsMiddleware))
-	mux.HandleFunc("/docs/", httpSwagger.WrapHandler)
+	mux.HandleFunc("GET /api/inbox/{address}", wrap(handler.handleGetInbox, loggingMiddleware, corsMiddleware, signatureAuthMiddleware, rateLimitMiddleware(s, inboxLimit)))
+	mux.HandleFunc("GET /api/inbox/{address}/{emailId}", wrap(handler.handleGetEmail, loggingMiddleware, corsMiddleware, signatureAuthMiddleware, rateLimitMiddleware(s, inboxLimit)))
+	mux.HandleFunc("DELETE /api/inbox/{address}/{emailId}", wrap(handler.handleDeleteEmail, loggingMiddleware, corsMiddleware, signatureAuthMiddleware, rateLimitMiddleware(s, deleteLimit)))
+	mux.HandleFunc("DELETE /api/inbox/{address}", wrap(handler.handleClearInbox, loggingMiddleware, corsMiddleware, signatureAuthMiddleware, rateLimitMiddleware(s, deleteLimit)))
+
+	mux.HandleFunc("GET /api/health", wrap(handler.handleHealth, loggingMiddleware, corsMiddleware))
+	mux.HandleFunc("GET /docs/", httpSwagger.WrapHandler)
 
 	return mux
 }
