@@ -2,14 +2,19 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"crypto/ed25519"
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fn-jakubkarp/coresend/internal/store"
@@ -45,11 +50,59 @@ func rateLimitMiddleware(s store.EmailStore, config RateLimitConfig) func(http.H
 	}
 }
 
+type contextKey string
+
+const NonceContextKey contextKey = "csp-nonce"
+
+func generateNonce() (string, error) {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+func securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nonce, err := generateNonce()
+		if err != nil {
+			log.Printf("Failed to generate CSP nonce: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		csp := fmt.Sprintf(
+			"default-src 'self'; "+
+				"script-src 'self' 'nonce-%s' 'strict-dynamic'; "+
+				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "+
+				"font-src 'self' https://fonts.gstatic.com; "+
+				"img-src 'self' data: https:; "+
+				"connect-src 'self'; "+
+				"object-src 'none'; "+
+				"base-uri 'self'; "+
+				"form-action 'self'; "+
+				"frame-ancestors 'none'",
+			nonce,
+		)
+		w.Header().Set("Content-Security-Policy", csp)
+		w.Header().Set("X-CSP-Nonce", nonce)
+
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+
+		ctx := context.WithValue(r.Context(), NonceContextKey, nonce)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Public-Key, X-Signature, X-Timestamp, X-Nonce")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Public-Key, X-Signature, X-Timestamp, X-Nonce, X-CSP-Nonce")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -150,5 +203,43 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 
 			next.ServeHTTP(w, r)
 		})
+	}
+}
+
+func serveStatic(staticDir string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		staticFs := http.FileServer(http.Dir(staticDir))
+
+		path := r.URL.Path
+		if path == "/" || path == "" {
+			path = "/index.html"
+		}
+
+		if path == "/index.html" {
+			nonce, ok := r.Context().Value(NonceContextKey).(string)
+			if !ok {
+				log.Println("Missing nonce in request context")
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+			filePath := staticDir + "/index.html"
+			content, err := os.ReadFile(filePath)
+			if err != nil {
+				log.Printf("Failed to read index.html: %v", err)
+				staticFs.ServeHTTP(w, r)
+				return
+			}
+
+			html := string(content)
+
+			html = strings.ReplaceAll(html, `__CSP_NONCE__`, nonce)
+			w.Write([]byte(html))
+			return
+		}
+
+		staticFs.ServeHTTP(w, r)
 	}
 }
