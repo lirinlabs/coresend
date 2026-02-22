@@ -9,7 +9,7 @@ import { useAddInbox } from '@/hooks/useAddInbox';
 const Inbox = () => {
     const { identities, activeIndex, setActiveIndex, removeIdentity } =
         useIdentityStore();
-    const { addInbox, canAddInbox } = useAddInbox();
+    const { addInbox, isAddDisabled } = useAddInbox();
     const [sidebarExpanded, setSidebarExpanded] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
     const [emails, setEmails] = useState(mockEmails);
@@ -50,7 +50,7 @@ const Inbox = () => {
                     onToggle={handleToggleSidebar}
                     onSelectAccount={setActiveIndex}
                     onAddAccount={addInbox}
-                    isAddDisabled={!canAddInbox}
+                    isAddDisabled={isAddDisabled}
                     onDeleteAccount={handleDeleteAccount}
                 />
                 <InboxList
