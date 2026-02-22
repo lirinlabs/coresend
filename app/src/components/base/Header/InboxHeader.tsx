@@ -1,19 +1,27 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import TrashIcon from '@/components/ui/trash-icon';
 import { Logo } from '../Logo/Logo';
 import { ModeToggle } from '../ModeToggle/ModeToggle';
 import CopyIcon from '@/components/ui/copy-icon';
-import FlameIcon from '@/components/ui/flame-icon';
 import Typography from '../Typography/typography';
 import { ActionIcon } from '../ActionIcon';
 import { SettingsMenu } from '../SettingsMenu/SettingsMenu';
+import { ConfirmDialog } from '../ConfirmDialog/ConfirmDialog';
 import { copyToClipboard } from '@/lib/utils';
 import { useIdentityStore } from '@/lib/stores/identityStore';
 
 export const InboxHeader = () => {
     const [isCopied, setIsCopied] = useState(false);
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const timeoutRef = useRef<number | null>(null);
-    const identity = useIdentityStore((state) => state.identity);
+    const navigate = useNavigate();
+    const identities = useIdentityStore((state) => state.identities);
+    const activeIndex = useIdentityStore((state) => state.activeIndex);
+    const removeIdentity = useIdentityStore((state) => state.removeIdentity);
+    const clearAll = useIdentityStore((state) => state.clearAll);
+    const identity = identities[activeIndex] ?? null;
 
     const getEmailAddress = () => {
         if (identity) {
@@ -56,6 +64,29 @@ export const InboxHeader = () => {
 
     const { displayAddress } = getEmailAddress();
 
+    const handleDeleteInbox = () => {
+        if (identities.length === 1) {
+            clearAll();
+            navigate('/');
+            toast.success('Session ended');
+        } else {
+            const removedIndex = activeIndex;
+            removeIdentity(activeIndex);
+            toast.success(`Inbox ${removedIndex + 1} deleted`);
+        }
+    };
+
+    const handleLogout = () => {
+        setShowLogoutDialog(true);
+    };
+
+    const confirmLogout = () => {
+        clearAll();
+        navigate('/');
+        toast.success('Logged out');
+        setShowLogoutDialog(false);
+    };
+
     return (
         <header className='w-full px-3 md:px-6 py-3 border-b border-border'>
             <div className=' mx-auto flex items-center justify-between'>
@@ -86,23 +117,11 @@ export const InboxHeader = () => {
                         icon={
                             <TrashIcon className='text-muted-foreground hover:text-primary transition-colors h-4 w-4 ' />
                         }
-                        tooltip='Wipe inbox'
-                        title='Wipe Inbox'
-                        description='This will permanently delete all emails in the current inbox.'
-                        actionText='Wipe All'
-                        onAction={() => console.log('Wipe inbox')}
-                    />
-
-                    <ActionIcon
-                        icon={
-                            <FlameIcon className='text-muted-foreground hover:text-primary transition-colors h-4 w-4' />
-                        }
-                        tooltip='Burn inbox'
-                        title='Burn Inbox'
-                        description='This will permanently delete the entire inbox including the address.'
-                        actionText='Burn Now'
-                        onAction={() => console.log('Burn inbox')}
-                        iconClassName='text-muted-foreground hover:text-primary transition-colors h-4 w-4'
+                        tooltip='Delete inbox'
+                        title='Delete Inbox'
+                        description='This will permanently delete this inbox. If this is your last inbox, you will be returned to the home screen.'
+                        actionText='Delete'
+                        onAction={handleDeleteInbox}
                     />
 
                     <SettingsMenu />
@@ -114,11 +133,21 @@ export const InboxHeader = () => {
                         transform='uppercase'
                         color='muted'
                         className='cursor-pointer hover:text-primary transition-colors'
+                        onClick={handleLogout}
                     >
                         LOGOUT
                     </Typography>
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={showLogoutDialog}
+                onClose={() => setShowLogoutDialog(false)}
+                onConfirm={confirmLogout}
+                title='Logout'
+                description='Are you sure you want to logout? This will end your current session and you will need to unlock your inbox again.'
+                confirmText='Logout'
+            />
         </header>
     );
 };

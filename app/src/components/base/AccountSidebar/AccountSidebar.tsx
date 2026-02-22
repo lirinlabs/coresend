@@ -14,6 +14,7 @@ export const AccountSidebar = ({
     onToggle,
     onSelectAccount,
     onAddAccount,
+    isAddDisabled = false,
 }: AccountSidebarProps) => {
     const totalUnread = accounts.reduce(
         (sum, acc) => sum + acc.messageCount,
@@ -100,7 +101,10 @@ export const AccountSidebar = ({
 
             {/* Add account button */}
             <div className='p-2 border-t border-border flex justify-center'>
-                <AddAccountButton onClick={onAddAccount} />
+                <AddAccountButton
+                    onClick={onAddAccount}
+                    disabled={isAddDisabled}
+                />
             </div>
         </motion.aside>
     );
