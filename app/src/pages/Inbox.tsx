@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { InboxHeader } from '@/components/base/Header/InboxHeader';
 import { AccountSidebar, type Account } from '@/components/base/AccountSidebar';
@@ -18,8 +18,25 @@ const Inbox = () => {
     const { addInbox, isAddDisabled } = useAddInbox();
 
     const [sidebarExpanded, setSidebarExpanded] = useState(false);
-    const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
-    const [emails, setEmails] = useState(mockEmails);
+    const [emailsByAccount, setEmailsByAccount] = useState<
+        Record<string, Email[]>
+    >({});
+    const [selectedByAccount, setSelectedByAccount] = useState<
+        Record<string, string | null>
+    >({});
+
+    const emails = emailsByAccount[currentAddress] ?? [];
+    const selectedEmailId = selectedByAccount[currentAddress] ?? null;
+    const selectedEmail = emails.find((e) => e.id === selectedEmailId) ?? null;
+
+    useEffect(() => {
+        if (currentAddress && !emailsByAccount[currentAddress]) {
+            setEmailsByAccount((prev) => ({
+                ...prev,
+                [currentAddress]: mockEmails,
+            }));
+        }
+    }, [currentAddress, emailsByAccount]);
 
     if (identities.length === 0) {
         return <Navigate to='/' replace />;
@@ -35,6 +52,20 @@ const Inbox = () => {
 
     const handleDeleteAccount = (index: number) => {
         removeIdentity(index);
+    };
+
+    const setEmails = (updater: (prev: Email[]) => Email[]) => {
+        setEmailsByAccount((prev) => ({
+            ...prev,
+            [currentAddress]: updater(prev[currentAddress] ?? []),
+        }));
+    };
+
+    const setSelectedEmail = (email: Email | null) => {
+        setSelectedByAccount((prev) => ({
+            ...prev,
+            [currentAddress]: email?.id ?? null,
+        }));
     };
 
     const handleDeleteEmail = (emailId: string) => {
