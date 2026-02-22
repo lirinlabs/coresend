@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { InboxHeader } from '@/components/base/Header/InboxHeader';
 import { AccountSidebar, type Account } from '@/components/base/AccountSidebar';
 import { InboxList, mockEmails, type Email } from '@/components/base/InboxList';
@@ -7,12 +8,19 @@ import { useIdentityStore } from '@/lib/stores/identityStore';
 import { useAddInbox } from '@/hooks/useAddInbox';
 
 const Inbox = () => {
-    const { identities, activeIndex, setActiveIndex, removeIdentity } =
-        useIdentityStore();
+    const identities = useIdentityStore((s) => s.identities);
+    const activeIndex = useIdentityStore((s) => s.activeIndex);
+    const setActiveIndex = useIdentityStore((s) => s.setActiveIndex);
+    const removeIdentity = useIdentityStore((s) => s.removeIdentity);
     const { addInbox, isAddDisabled } = useAddInbox();
+
     const [sidebarExpanded, setSidebarExpanded] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
     const [emails, setEmails] = useState(mockEmails);
+
+    if (identities.length === 0) {
+        return <Navigate to='/' replace />;
+    }
 
     const currentAddress = identities[activeIndex]?.address ?? '';
 

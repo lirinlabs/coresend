@@ -18,22 +18,50 @@ export const useAddInbox = () => {
     const isAddDisabled = !canAddInbox || registerMutation.isPending;
 
     const addInbox = async () => {
-        if (!canAddInbox || !mnemonic || registerMutation.isPending) {
-            return;
+        if (!canAddInbox || !mnemonic || registerMutation.isPending) return;
+
+        const state = useIdentityStore.getState();
+        const existingIndexes = state.identities
+            .map((i) => i.index)
+            .sort((a, b) => a - b);
+        let nextDerivationIndex = 0;
+        for (const idx of existingIndexes) {
+            if (idx === nextDerivationIndex) nextDerivationIndex++;
+            else if (idx > nextDerivationIndex) break;
         }
 
-        const nextIndex = identities.length;
-        const identity = deriveIdentityFromMnemonic(mnemonic, nextIndex);
+        const identity = deriveIdentityFromMnemonic(
+            mnemonic,
+            nextDerivationIndex,
+        );
+        const prevActiveIndex = state.activeIndex;
+        const insertPosition = state.identities.length;
 
         addIdentity(identity);
-        setActiveIndex(nextIndex);
+        setActiveIndex(insertPosition);
 
         try {
             await registerMutation.mutateAsync({ address: identity.address });
-            toast.success(`Inbox ${nextIndex + 1} created`);
+            toast.success(
+                'New inbox created, this is your new email: ' +
+                    identity.address,
+            );
         } catch {
-            removeIdentity(nextIndex);
-            setActiveIndex(Math.max(0, identities.length - 1));
+            const currentState = useIdentityStore.getState();
+            const addedIndex = currentState.identities.findIndex(
+                (i) => i.address === identity.address,
+            );
+            if (addedIndex !== -1) removeIdentity(addedIndex);
+
+            const rollbackState = useIdentityStore.getState();
+            if (rollbackState.identities.length > 0) {
+                setActiveIndex(
+                    Math.min(
+                        prevActiveIndex,
+                        rollbackState.identities.length - 1,
+                    ),
+                );
+            }
             toast.error('Failed to register inbox. Please try again.');
         }
     };

@@ -42,7 +42,17 @@ export const useIdentityStore = create<IdentityState>((set) => ({
             };
         }),
 
-    setActiveIndex: (index) => set({ activeIndex: index }),
+    setActiveIndex: (index) =>
+        set((state) => {
+            if (state.identities.length === 0) return state;
+            const clamped = Math.max(
+                0,
+                Math.min(index, state.identities.length - 1),
+            );
+            return clamped === state.activeIndex
+                ? state
+                : { activeIndex: clamped };
+        }),
 
     clearAll: () => set({ mnemonic: null, identities: [], activeIndex: 0 }),
 }));
