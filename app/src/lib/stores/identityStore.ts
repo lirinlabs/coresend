@@ -2,13 +2,47 @@ import { create } from 'zustand';
 import type { DerivedIdentity } from '../crypto/deriveIdentityFromMnemonic';
 
 interface IdentityState {
-    identity: DerivedIdentity | null;
-    setIdentity: (identity: DerivedIdentity) => void;
-    clearIdentity: () => void;
+    mnemonic: string | null;
+    identities: DerivedIdentity[];
+    activeIndex: number;
+    setMnemonic: (mnemonic: string) => void;
+    addIdentity: (identity: DerivedIdentity) => void;
+    removeIdentity: (index: number) => void;
+    setActiveIndex: (index: number) => void;
+    clearAll: () => void;
 }
 
 export const useIdentityStore = create<IdentityState>((set) => ({
-    identity: null,
-    setIdentity: (identity) => set({ identity }),
-    clearIdentity: () => set({ identity: null }),
+    mnemonic: null,
+    identities: [],
+    activeIndex: 0,
+
+    setMnemonic: (mnemonic) => set({ mnemonic }),
+
+    addIdentity: (identity) =>
+        set((state) => {
+            if (state.identities.some((i) => i.address === identity.address)) {
+                return state;
+            }
+            return { identities: [...state.identities, identity] };
+        }),
+
+    removeIdentity: (index) =>
+        set((state) => {
+            const newIdentities = state.identities.filter(
+                (_, i) => i !== index,
+            );
+            const newActiveIndex = Math.min(
+                state.activeIndex,
+                Math.max(0, newIdentities.length - 1),
+            );
+            return {
+                identities: newIdentities,
+                activeIndex: newIdentities.length === 0 ? 0 : newActiveIndex,
+            };
+        }),
+
+    setActiveIndex: (index) => set({ activeIndex: index }),
+
+    clearAll: () => set({ mnemonic: null, identities: [], activeIndex: 0 }),
 }));
