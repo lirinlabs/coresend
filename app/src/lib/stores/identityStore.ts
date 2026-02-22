@@ -10,9 +10,12 @@ interface IdentityState {
     removeIdentity: (index: number) => void;
     setActiveIndex: (index: number) => void;
     clearAll: () => void;
+    getActiveIdentity: () => DerivedIdentity | null;
+    getActiveAddress: () => string;
+    hasIdentities: () => boolean;
 }
 
-export const useIdentityStore = create<IdentityState>((set) => ({
+export const useIdentityStore = create<IdentityState>((set, get) => ({
     mnemonic: null,
     identities: [],
     activeIndex: 0,
@@ -55,4 +58,20 @@ export const useIdentityStore = create<IdentityState>((set) => ({
         }),
 
     clearAll: () => set({ mnemonic: null, identities: [], activeIndex: 0 }),
+
+    getActiveIdentity: () => {
+        const state = get();
+        return state.identities[state.activeIndex] ?? null;
+    },
+
+    getActiveAddress: () => {
+        const state = get();
+        const identity = state.identities[state.activeIndex];
+        return identity?.address ?? '';
+    },
+
+    hasIdentities: () => {
+        const state = get();
+        return state.identities.length > 0;
+    },
 }));

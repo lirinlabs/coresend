@@ -10,18 +10,21 @@ import { ActionIcon } from '../ActionIcon';
 import { SettingsMenu } from '../SettingsMenu/SettingsMenu';
 import { ConfirmDialog } from '../ConfirmDialog/ConfirmDialog';
 import { copyToClipboard } from '@/lib/utils';
-import { useIdentityStore } from '@/lib/stores/identityStore';
+import { useInboxHeaderStore } from '@/lib/stores/identityStore.selectors';
 
 export const InboxHeader = () => {
     const [isCopied, setIsCopied] = useState(false);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const timeoutRef = useRef<number | null>(null);
     const navigate = useNavigate();
-    const identities = useIdentityStore((state) => state.identities);
-    const activeIndex = useIdentityStore((state) => state.activeIndex);
-    const removeIdentity = useIdentityStore((state) => state.removeIdentity);
-    const clearAll = useIdentityStore((state) => state.clearAll);
-    const identity = identities[activeIndex] ?? null;
+    const {
+        identities,
+        activeIndex,
+        removeIdentity,
+        clearAll,
+        getActiveIdentity,
+    } = useInboxHeaderStore();
+    const identity = getActiveIdentity();
 
     const getEmailAddress = () => {
         if (identity) {
