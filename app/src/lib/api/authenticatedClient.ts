@@ -56,7 +56,9 @@ export const customFetch = async <T>(
             if (errorBody?.error?.message) {
                 errorMessage = `${errorMessage} - ${errorBody.error.message}`;
             }
-        } catch {}
+        } catch {
+            // Ignore error body parsing errors - fall through to throw generic error message
+        }
         throw new Error(errorMessage);
     }
 
