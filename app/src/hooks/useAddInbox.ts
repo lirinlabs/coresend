@@ -1,4 +1,5 @@
 import { useIdentityStore } from '@/lib/stores/identityStore';
+import { useAddInboxStore } from '@/lib/stores/identityStore.selectors';
 import { deriveIdentityFromMnemonic } from '@/lib/crypto/deriveIdentityFromMnemonic';
 import { useRegisterAddress } from '@/api/generated';
 import { toast } from 'sonner';
@@ -6,11 +7,13 @@ import { toast } from 'sonner';
 const MAX_INBOXES = 10;
 
 export const useAddInbox = () => {
-    const mnemonic = useIdentityStore((state) => state.mnemonic);
-    const identities = useIdentityStore((state) => state.identities);
-    const addIdentity = useIdentityStore((state) => state.addIdentity);
-    const removeIdentity = useIdentityStore((state) => state.removeIdentity);
-    const setActiveIndex = useIdentityStore((state) => state.setActiveIndex);
+    const {
+        mnemonic,
+        identities,
+        addIdentity,
+        removeIdentity,
+        setActiveIndex,
+    } = useAddInboxStore();
 
     const registerMutation = useRegisterAddress();
 

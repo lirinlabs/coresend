@@ -10,23 +10,25 @@ import { ActionIcon } from '../ActionIcon';
 import { SettingsMenu } from '../SettingsMenu/SettingsMenu';
 import { ConfirmDialog } from '../ConfirmDialog/ConfirmDialog';
 import { copyToClipboard } from '@/lib/utils';
-import { useIdentityStore } from '@/lib/stores/identityStore';
+import { useInboxHeaderStore } from '@/lib/stores/identityStore.selectors';
 
 export const InboxHeader = () => {
     const [isCopied, setIsCopied] = useState(false);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const timeoutRef = useRef<number | null>(null);
     const navigate = useNavigate();
-    const identities = useIdentityStore((state) => state.identities);
-    const activeIndex = useIdentityStore((state) => state.activeIndex);
-    const removeIdentity = useIdentityStore((state) => state.removeIdentity);
-    const clearAll = useIdentityStore((state) => state.clearAll);
-    const identity = identities[activeIndex] ?? null;
+    const {
+        identities,
+        activeIndex,
+        activeIdentity,
+        removeIdentity,
+        clearAll,
+    } = useInboxHeaderStore();
 
     const getEmailAddress = () => {
-        if (identity) {
-            const fullAddress = `${identity.address}@coresend.io`;
-            const truncated = `${identity.address.slice(0, 4)}...${identity.address.slice(-4)}@coresend.io`;
+        if (activeIdentity) {
+            const fullAddress = `${activeIdentity.address}@coresend.io`;
+            const truncated = `${activeIdentity.address.slice(0, 4)}...${activeIdentity.address.slice(-4)}@coresend.io`;
             return { fullAddress, displayAddress: truncated };
         }
         const fallback = '4df1234567890432C@coresend.io';
