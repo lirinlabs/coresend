@@ -7,16 +7,21 @@ import {
 
 interface AddAccountButtonProps {
     onClick: () => void;
+    disabled?: boolean;
 }
 
-export const AddAccountButton = ({ onClick }: AddAccountButtonProps) => {
+export const AddAccountButton = ({
+    onClick,
+    disabled = false,
+}: AddAccountButtonProps) => {
     return (
         <Tooltip>
             <TooltipTrigger asChild>
                 <button
                     type='button'
                     onClick={onClick}
-                    className='w-8 h-8 border border-dashed border-border rounded flex items-center justify-center hover:bg-secondary hover:border-solid transition-colors'
+                    disabled={disabled}
+                    className='w-8 h-8 border border-dashed border-border rounded flex items-center justify-center hover:bg-secondary hover:border-solid transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-dashed'
                 >
                     <Plus
                         weight='bold'
@@ -24,7 +29,9 @@ export const AddAccountButton = ({ onClick }: AddAccountButtonProps) => {
                     />
                 </button>
             </TooltipTrigger>
-            <TooltipContent side='right'>Derive new address</TooltipContent>
+            <TooltipContent side='right'>
+                {disabled ? 'Maximum 10 inboxes' : 'Derive new address'}
+            </TooltipContent>
         </Tooltip>
     );
 };

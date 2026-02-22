@@ -5,7 +5,8 @@ export const customFetch = async <T>(
     url: string,
     options?: RequestInit,
 ): Promise<T> => {
-    const identity = useIdentityStore.getState().identity;
+    const { identities, activeIndex } = useIdentityStore.getState();
+    const identity = identities[activeIndex];
 
     if (!identity) {
         throw new Error('No identity - please unlock inbox first');
@@ -56,7 +57,9 @@ export const customFetch = async <T>(
             if (errorBody?.error?.message) {
                 errorMessage = `${errorMessage} - ${errorBody.error.message}`;
             }
-        } catch {}
+        } catch {
+            // Ignore error body parsing errors - fall through to throw generic error message
+        }
         throw new Error(errorMessage);
     }
 

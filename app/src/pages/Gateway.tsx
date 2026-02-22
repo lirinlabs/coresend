@@ -50,9 +50,14 @@ const Gateway = () => {
 
             const mnemonic = seedWords.join(' ').trim();
 
-            const identity = deriveIdentityFromMnemonic(mnemonic);
+            const identity = deriveIdentityFromMnemonic(mnemonic, 0);
 
-            useIdentityStore.getState().setIdentity(identity);
+            const { clearAll, setMnemonic, addIdentity, setActiveIndex } =
+                useIdentityStore.getState();
+            clearAll();
+            setMnemonic(mnemonic);
+            addIdentity(identity);
+            setActiveIndex(0);
 
             await register({ address: identity.address });
 

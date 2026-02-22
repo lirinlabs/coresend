@@ -224,3 +224,33 @@
         opacity: 0.8;
     }
 }
+
+/* Neobrutalist Toast Styling */
+.toaster [data-sonner-toast] {
+    border: 1px solid var(--foreground);
+    box-shadow: var(--shadow-hard-value);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    border-radius: 0;
+}
+
+.toaster [data-type='success'] {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.toaster [data-type='error'] {
+    background: var(--destructive);
+    color: var(--destructive-foreground);
+}
+
+.toaster [data-type='warning'] {
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    border-color: var(--foreground);
+}
+
+.toaster [data-type='info'] {
+    background: var(--background);
+    color: var(--foreground);
+}
