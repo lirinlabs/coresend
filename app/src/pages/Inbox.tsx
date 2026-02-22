@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { InboxHeader } from '@/components/base/Header/InboxHeader';
 import { AccountSidebar, type Account } from '@/components/base/AccountSidebar';
-import { InboxList, mockEmails, type Email } from '@/components/base/InboxList';
+import { InboxList, type Email } from '@/components/base/InboxList';
 import { MessagePanel } from '@/components/base/MessagePanel';
 import { useInboxPageStore } from '@/lib/stores/identityStore.selectors';
 import { useAddInbox } from '@/hooks/useAddInbox';
@@ -28,15 +28,6 @@ const Inbox = () => {
     const emails = emailsByAccount[currentAddress] ?? [];
     const selectedEmailId = selectedByAccount[currentAddress] ?? null;
     const selectedEmail = emails.find((e) => e.id === selectedEmailId) ?? null;
-
-    useEffect(() => {
-        if (currentAddress && !emailsByAccount[currentAddress]) {
-            setEmailsByAccount((prev) => ({
-                ...prev,
-                [currentAddress]: mockEmails,
-            }));
-        }
-    }, [currentAddress, emailsByAccount]);
 
     if (identities.length === 0) {
         return <Navigate to='/' replace />;
