@@ -1,18 +1,32 @@
 import { useState } from 'react';
 import { InboxHeader } from '@/components/base/Header/InboxHeader';
-import { AccountSidebar, mockAccounts } from '@/components/base/AccountSidebar';
+import { AccountSidebar, type Account } from '@/components/base/AccountSidebar';
 import { InboxList, mockEmails, type Email } from '@/components/base/InboxList';
 import { MessagePanel } from '@/components/base/MessagePanel';
+import { useIdentityStore } from '@/lib/stores/identityStore';
+import { useAddInbox } from '@/hooks/useAddInbox';
 
 const Inbox = () => {
-    const [selectedAccount, setSelectedAccount] = useState(0);
+    const { identities, activeIndex, setActiveIndex, removeIdentity } =
+        useIdentityStore();
+    const { addInbox, canAddInbox } = useAddInbox();
     const [sidebarExpanded, setSidebarExpanded] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
     const [emails, setEmails] = useState(mockEmails);
 
-    const currentAddress = mockAccounts[selectedAccount]?.address ?? '';
+    const currentAddress = identities[activeIndex]?.address ?? '';
+
+    const accounts: Account[] = identities.map((identity) => ({
+        id: identity.address,
+        address: identity.address,
+        messageCount: 0,
+    }));
 
     const handleToggleSidebar = () => setSidebarExpanded((prev) => !prev);
+
+    const handleDeleteAccount = (index: number) => {
+        removeIdentity(index);
+    };
 
     const handleDeleteEmail = (emailId: string) => {
         setEmails((prev) => prev.filter((email) => email.id !== emailId));
@@ -29,13 +43,15 @@ const Inbox = () => {
             <InboxHeader />
             <div className='flex-1 flex overflow-hidden'>
                 <AccountSidebar
-                    accounts={mockAccounts}
-                    selectedIndex={selectedAccount}
+                    accounts={accounts}
+                    selectedIndex={activeIndex}
                     currentAddress={currentAddress}
                     isExpanded={sidebarExpanded}
                     onToggle={handleToggleSidebar}
-                    onSelectAccount={setSelectedAccount}
-                    onAddAccount={() => console.log('Add account')}
+                    onSelectAccount={setActiveIndex}
+                    onAddAccount={addInbox}
+                    isAddDisabled={!canAddInbox}
+                    onDeleteAccount={handleDeleteAccount}
                 />
                 <InboxList
                     emails={emails}
