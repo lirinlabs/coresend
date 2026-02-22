@@ -11,10 +11,9 @@ const Inbox = () => {
     const {
         identities,
         activeIndex,
+        currentAddress,
         setActiveIndex,
         removeIdentity,
-        hasIdentities,
-        getActiveAddress,
     } = useInboxPageStore();
     const { addInbox, isAddDisabled } = useAddInbox();
 
@@ -22,11 +21,9 @@ const Inbox = () => {
     const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
     const [emails, setEmails] = useState(mockEmails);
 
-    if (!hasIdentities()) {
+    if (identities.length === 0) {
         return <Navigate to='/' replace />;
     }
-
-    const currentAddress = getActiveAddress();
 
     const accounts: Account[] = identities.map((identity) => ({
         id: identity.address,

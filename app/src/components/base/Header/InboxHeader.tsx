@@ -20,16 +20,15 @@ export const InboxHeader = () => {
     const {
         identities,
         activeIndex,
+        activeIdentity,
         removeIdentity,
         clearAll,
-        getActiveIdentity,
     } = useInboxHeaderStore();
-    const identity = getActiveIdentity();
 
     const getEmailAddress = () => {
-        if (identity) {
-            const fullAddress = `${identity.address}@coresend.io`;
-            const truncated = `${identity.address.slice(0, 4)}...${identity.address.slice(-4)}@coresend.io`;
+        if (activeIdentity) {
+            const fullAddress = `${activeIdentity.address}@coresend.io`;
+            const truncated = `${activeIdentity.address.slice(0, 4)}...${activeIdentity.address.slice(-4)}@coresend.io`;
             return { fullAddress, displayAddress: truncated };
         }
         const fallback = '4df1234567890432C@coresend.io';

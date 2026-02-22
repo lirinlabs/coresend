@@ -6,9 +6,9 @@ export const useInboxHeaderStore = () => {
         useShallow((state) => ({
             identities: state.identities,
             activeIndex: state.activeIndex,
+            activeIdentity: state.identities[state.activeIndex] ?? null,
             removeIdentity: state.removeIdentity,
             clearAll: state.clearAll,
-            getActiveIdentity: state.getActiveIdentity,
         })),
     );
 };
@@ -18,10 +18,9 @@ export const useInboxPageStore = () => {
         useShallow((state) => ({
             identities: state.identities,
             activeIndex: state.activeIndex,
+            currentAddress: state.identities[state.activeIndex]?.address ?? '',
             setActiveIndex: state.setActiveIndex,
             removeIdentity: state.removeIdentity,
-            hasIdentities: state.hasIdentities,
-            getActiveAddress: state.getActiveAddress,
         })),
     );
 };
