@@ -189,6 +189,9 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 
 			payload := fmt.Sprintf("%s:%s:%s:%s:%s", r.Method, r.URL.Path, tsStr, bodyHashHex, nonce)
 
+			log.Printf("[VERIFY DEBUG] method=%s path=%s ts=%s bodyLen=%d bodyHash=%s nonce=%s payload=%s",
+				r.Method, r.URL.Path, tsStr, len(bodyBytes), bodyHashHex, nonce, payload)
+
 			if !ed25519.Verify(pubKeyBytes, []byte(payload), sigBytes) {
 				writeError(w, ErrCodeUnauthorized, "Invalid cryptographic signature", http.StatusUnauthorized)
 				return

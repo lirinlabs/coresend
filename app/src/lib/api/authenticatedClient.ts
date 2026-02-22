@@ -29,6 +29,8 @@ export const customFetch = async <T>(
     const path = new URL(url, window.location.origin).pathname;
     const method = options?.method || 'GET';
 
+    console.log('[AUTH DEBUG]', { url, path, method, body: body ?? '(empty)' });
+
     const authHeaders: Record<string, string> = signRequest({
         method,
         path,

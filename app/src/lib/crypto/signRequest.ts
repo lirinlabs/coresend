@@ -26,6 +26,17 @@ export const signRequest = (
 
     const signature = ed25519.sign(payloadBytes, privateKey);
 
+    console.log('[SIGN DEBUG]', {
+        method,
+        path,
+        body: body || '(empty)',
+        bodyHash,
+        timestamp,
+        nonce,
+        payload,
+        signatureLength: signature.length,
+    });
+
     return {
         'X-Public-Key': bytesToHex(publicKey),
         'X-Signature': bytesToHex(signature),
