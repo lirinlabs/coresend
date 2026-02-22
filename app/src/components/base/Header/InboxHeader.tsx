@@ -21,7 +21,7 @@ export const InboxHeader = () => {
     const activeIndex = useIdentityStore((state) => state.activeIndex);
     const removeIdentity = useIdentityStore((state) => state.removeIdentity);
     const clearAll = useIdentityStore((state) => state.clearAll);
-    const identity = identities[activeIndex];
+    const identity = identities[activeIndex] ?? null;
 
     const getEmailAddress = () => {
         if (identity) {
