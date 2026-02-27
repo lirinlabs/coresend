@@ -26,14 +26,12 @@ services:
       - DOMAIN_NAME=${DOMAIN_NAME}
       - SMTP_LISTEN_ADDR=:1025
       - HTTP_LISTEN_ADDR=:8080
-      # Caddy stores certs in this structure
       - SMTP_CERT_PATH=/certs/${DOMAIN_NAME}/${DOMAIN_NAME}.crt
       - SMTP_KEY_PATH=/certs/${DOMAIN_NAME}/${DOMAIN_NAME}.key
     depends_on:
       redis:
         condition: service_healthy
     volumes:
-      # Share Caddy's certificates with backend for STARTTLS
       - caddy_certs:/certs:ro
     networks:
       - coresend-network
@@ -67,6 +65,60 @@ services:
       timeout: 10s
       retries: 3
 
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    restart: unless-stopped
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    networks:
+      - coresend-network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    networks:
+      - coresend-network
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+    networks:
+      - coresend-network
+    depends_on:
+      - redis-exporter
+      - node-exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - coresend-network
+    depends_on:
+      - prometheus
+
 volumes:
   redis_data:
     driver: local
@@ -75,6 +127,10 @@ volumes:
   caddy_certs:
     driver: local
   caddy_config:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
     driver: local
 
 networks:
