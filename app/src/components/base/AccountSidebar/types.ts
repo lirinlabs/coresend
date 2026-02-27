@@ -12,4 +12,6 @@ export interface AccountSidebarProps {
     onToggle: () => void;
     onSelectAccount: (index: number) => void;
     onAddAccount: () => void;
+    isAddDisabled?: boolean;
+    onDeleteAccount?: (index: number) => void;
 }

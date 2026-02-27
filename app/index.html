@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+        <link rel="icon" type="image/svg+xml" href="/Logo.svg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,9 +11,117 @@
             rel="stylesheet"
         />
         <title>Coresend.io</title>
+
+        <meta
+            name="description"
+            content="Stateless temporary email powered by BIP39 deterministic logic. 24h TTL, no database, no signup. Secure, private, inbound-only disposable email addresses."
+        />
+        <meta
+            name="keywords"
+            content="temporary email, disposable email, secure email, private email, no signup email, free temporary email, stateless email, BIP39 email"
+        />
+        <link rel="canonical" href="https://coresend.io/" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://coresend.io/" />
+        <meta
+            property="og:title"
+            content="Coresend - Stateless Temporary Email"
+        />
+        <meta
+            property="og:description"
+            content="Stateless temporary email powered by BIP39 deterministic logic. 24h TTL, no database, no signup. Secure, private, inbound-only disposable email addresses."
+        />
+        <meta property="og:image" content="https://coresend.io/Logo.svg" />
+        <meta property="og:site_name" content="Coresend" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://coresend.io/" />
+        <meta
+            name="twitter:title"
+            content="Coresend - Stateless Temporary Email"
+        />
+        <meta
+            name="twitter:description"
+            content="Stateless temporary email powered by BIP39 deterministic logic. 24h TTL, no database, no signup."
+        />
+        <meta name="twitter:image" content="https://coresend.io/Logo.svg" />
+
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#FF5500" />
+
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@graph": [
+                    {
+                        "@type": "Organization",
+                        "@id": "https://coresend.io/#organization",
+                        "name": "Coresend",
+                        "url": "https://coresend.io/",
+                        "logo": "https://coresend.io/Logo.svg",
+                        "sameAs": ["https://github.com/lirinlabs/coresend/"],
+                        "contactPoint": {
+                            "@type": "ContactPoint",
+                            "email": "lirinlabs@gmail.com",
+                            "contactType": "customer service"
+                        }
+                    },
+                    {
+                        "@type": "SoftwareApplication",
+                        "@id": "https://coresend.io/#webapp",
+                        "name": "Coresend",
+                        "description": "Stateless temporary email powered by BIP39 deterministic logic. 24h TTL, no database, no signup.",
+                        "url": "https://coresend.io/",
+                        "applicationCategory": "UtilitiesApplication",
+                        "operatingSystem": "Web, iOS, Android",
+                        "offers": {
+                            "@type": "Offer",
+                            "price": "0",
+                            "priceCurrency": "USD"
+                        },
+                        "featureList": [
+                            "Stateless temporary email",
+                            "BIP39 deterministic logic",
+                            "24-hour TTL",
+                            "No database storage",
+                            "No registration required",
+                            "Inbound-only messages"
+                        ]
+                    },
+                    {
+                        "@type": "WebSite",
+                        "@id": "https://coresend.io/#website",
+                        "url": "https://coresend.io/",
+                        "name": "Coresend",
+                        "description": "Stateless temporary email powered by BIP39 deterministic logic.",
+                        "publisher": {
+                            "@id": "https://coresend.io/#organization"
+                        }
+                    },
+                    {
+                        "@type": "BreadcrumbList",
+                        "@id": "https://coresend.io/#breadcrumb",
+                        "itemListElement": [
+                            {
+                                "@type": "ListItem",
+                                "position": 1,
+                                "name": "Home",
+                                "item": "https://coresend.io/"
+                            }
+                        ]
+                    }
+                ]
+            }
+        </script>
     </head>
     <body>
         <div id="root"></div>
-        <script type="module" src="/src/main.tsx"></script>
+        <script
+            nonce="__CSP_NONCE__"
+            type="module"
+            src="/src/main.tsx"
+        ></script>
     </body>
 </html>

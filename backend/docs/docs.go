@@ -26,49 +26,16 @@ const docTemplate = `{
                     "health"
                 ],
                 "summary": "Health check",
+                "operationId": "healthCheck",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.HealthResponse"
                         }
-                    }
-                }
-            }
-        },
-        "/api/inbox": {
-            "delete": {
-                "security": [
-                    {
-                        "SignatureAuth": []
-                    }
-                ],
-                "description": "Delete all emails for a specific address",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "inbox"
-                ],
-                "summary": "Clear entire inbox",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.DeleteResponse"
-                        }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "503": {
+                        "description": "Service unavailable - Redis disconnected",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorResponse"
                         }
@@ -84,9 +51,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Retrieve all emails for a specific address",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -94,6 +58,7 @@ const docTemplate = `{
                     "inbox"
                 ],
                 "summary": "Get inbox emails",
+                "operationId": "getInbox",
                 "parameters": [
                     {
                         "type": "string",
@@ -123,6 +88,51 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "SignatureAuth": []
+                    }
+                ],
+                "description": "Delete all emails for a specific address",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "Clear entire inbox",
+                "operationId": "clearInbox",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Address to clear inbox for",
+                        "name": "address",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.DeleteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/inbox/{address}/{emailId}": {
@@ -133,9 +143,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Retrieve a specific email by ID for an address",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -143,6 +150,7 @@ const docTemplate = `{
                     "inbox"
                 ],
                 "summary": "Get single email",
+                "operationId": "getEmail",
                 "parameters": [
                     {
                         "type": "string",
@@ -193,9 +201,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Delete a specific email by ID for an address",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -203,6 +208,7 @@ const docTemplate = `{
                     "inbox"
                 ],
                 "summary": "Delete single email",
+                "operationId": "deleteEmail",
                 "parameters": [
                     {
                         "type": "string",
@@ -240,6 +246,53 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/register/{address}": {
+            "post": {
+                "security": [
+                    {
+                        "SignatureAuth": []
+                    }
+                ],
+                "description": "Register a derived hex address to receive emails for the next 24 hours",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "Register address for inbound mail",
+                "operationId": "registerAddress",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Hex-encoded address to register",
+                        "name": "address",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.RegisterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid address format or missing address",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -247,39 +300,53 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "count": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 5
                 },
                 "deleted": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "example": true
                 },
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 }
             }
         },
         "api.EmailResponse": {
             "type": "object",
+            "required": [
+                "id"
+            ],
             "properties": {
                 "body": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "This is the email body content"
                 },
                 "from": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "sender@example.com"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 },
                 "received_at": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-01-01T12:00:00Z"
                 },
                 "subject": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Hello World"
                 },
                 "to": {
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev"
+                    ]
                 }
             }
         },
@@ -287,14 +354,16 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "INVALID_ADDRESS"
                 },
                 "details": {
                     "type": "object",
                     "additionalProperties": true
                 },
                 "message": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Address is required"
                 }
             }
         },
@@ -316,7 +385,8 @@ const docTemplate = `{
                     }
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "connected"
                 }
             }
         },
@@ -324,19 +394,44 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "address": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
                 },
                 "count": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 5
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev"
                 },
                 "emails": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.EmailResponse"
                     }
+                }
+            }
+        },
+        "api.RegisterResponse": {
+            "type": "object",
+            "required": [
+                "address",
+                "expires_in",
+                "registered"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 86400
+                },
+                "registered": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         }

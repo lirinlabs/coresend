@@ -1,6 +1,3 @@
-# Production Caddyfile
-# Domain is set via DOMAIN_NAME environment variable
-
 {$DOMAIN_NAME} {
 	# Redirect www to non-www
 	redir https://{$DOMAIN_NAME}{uri} permanent

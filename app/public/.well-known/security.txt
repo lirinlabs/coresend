@@ -1,0 +1,6 @@
+Contact: mailto:lirinlabs@gmail.com
+Expires: 2027-02-21T00:00:00.000Z
+Preferred-Languages: en, pl
+Canonical: https://coresend.io/.well-known/security.txt
+Policy: https://github.com/lirinlabs/coresend/security/policy
+Acknowledgments: https://github.com/lirinlabs/coresend/security/advisories

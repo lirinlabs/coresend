@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,7 +27,10 @@ type EmailStore interface {
 	DeleteEmail(ctx context.Context, addressBox string, emailID string) error
 	ClearInbox(ctx context.Context, addressBox string) (int64, error)
 	CheckRateLimit(ctx context.Context, key string, limit int, window time.Duration) (bool, int, error)
+	RegisterAddress(ctx context.Context, addressBox string, duration time.Duration) error
+	IsAddressActive(ctx context.Context, addressBox string) (bool, error)
 	Ping(ctx context.Context) error
+	CheckAndStoreNonce(ctx context.Context, nonce string, ttl time.Duration) (bool, error)
 }
 
 type Store struct {
@@ -56,30 +60,62 @@ func (s *Store) SaveEmail(ctx context.Context, addressBox string, email Email) e
 		return err
 	}
 
-	key := fmt.Sprintf("inbox:%s", addressBox)
+	zKey := fmt.Sprintf("inbox:%s", addressBox)
+	hKey := fmt.Sprintf("emails:%s", addressBox)
 
 	now := float64(time.Now().Unix())
+
 	pipe := s.client.Pipeline()
-	pipe.ZAdd(ctx, key, redis.Z{Score: now, Member: data})
-	pipe.ZRemRangeByRank(ctx, key, 100, -1)
-	pipe.Expire(ctx, key, 24*time.Hour)
+
+	pipe.ZAdd(ctx, zKey, redis.Z{Score: now, Member: email.ID})
+
+	pipe.HSet(ctx, hKey, email.ID, data)
+
+	pipe.ZRemRangeByRank(ctx, zKey, 0, -101) // Keep 100 latest emails
+
+	pipe.Expire(ctx, zKey, 24*time.Hour)
+	pipe.Expire(ctx, hKey, 24*time.Hour)
 
 	_, err = pipe.Exec(ctx)
 	return err
 }
 
 func (s *Store) GetEmails(ctx context.Context, addressBox string) ([]Email, error) {
-	key := fmt.Sprintf("inbox:%s", addressBox)
+	zKey := fmt.Sprintf("inbox:%s", addressBox)
+	hKey := fmt.Sprintf("emails:%s", addressBox)
 
-	data, err := s.client.ZRevRange(ctx, key, 0, -1).Result()
+	// Fetches newest IDs from the Sorted Set
+	ids, err := s.client.ZRevRange(ctx, zKey, 0, -1).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	emails := make([]Email, 0, len(data))
-	for _, item := range data {
+	if len(ids) == 0 {
+		return []Email{}, nil
+	}
+
+	// HMGet returns interface{} slice, so we must handle type assertion
+	rawData, err := s.client.HMGet(ctx, hKey, ids...).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	emails := make([]Email, 0, len(rawData))
+	for i, item := range rawData {
+		if item == nil {
+			slog.Warn("Skipping nil email data", "index", i, "id", ids[i])
+			continue
+		}
+
+		strData, ok := item.(string)
+		if !ok {
+			slog.Warn("Skipping email with invalid type", "index", i, "id", ids[i])
+			continue
+		}
+
 		var email Email
-		if err := json.Unmarshal([]byte(item), &email); err != nil {
+		if err := json.Unmarshal([]byte(strData), &email); err != nil {
+			slog.Warn("Skipping unmarshalable email", "index", i, "id", ids[i], "error", err)
 			continue
 		}
 		emails = append(emails, email)
@@ -89,59 +125,86 @@ func (s *Store) GetEmails(ctx context.Context, addressBox string) ([]Email, erro
 }
 
 func (s *Store) GetEmail(ctx context.Context, addressBox string, emailID string) (*Email, error) {
-	emails, err := s.GetEmails(ctx, addressBox)
-	if err != nil {
+	hKey := fmt.Sprintf("emails:%s", addressBox)
+
+	data, err := s.client.HGet(ctx, hKey, emailID).Result()
+	if err == redis.Nil {
+		return nil, nil // Email not found
+	} else if err != nil {
 		return nil, err
 	}
 
-	for _, email := range emails {
-		if email.ID == emailID {
-			return &email, nil
-		}
+	var email Email
+	if err := json.Unmarshal([]byte(data), &email); err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	return &email, nil
 }
 
 func (s *Store) DeleteEmail(ctx context.Context, addressBox string, emailID string) error {
-	key := fmt.Sprintf("inbox:%s", addressBox)
+	zKey := fmt.Sprintf("inbox:%s", addressBox)
+	hKey := fmt.Sprintf("emails:%s", addressBox)
 
-	emails, err := s.GetEmails(ctx, addressBox)
-	if err != nil {
-		return err
-	}
+	pipe := s.client.Pipeline()
 
-	for _, email := range emails {
-		if email.ID == emailID {
-			data, err := json.Marshal(email)
-			if err != nil {
-				return err
-			}
-			return s.client.ZRem(ctx, key, data).Err()
-		}
-	}
+	pipe.ZRem(ctx, zKey, emailID)
+	pipe.HDel(ctx, hKey, emailID)
 
-	return nil
+	_, err := pipe.Exec(ctx)
+	return err
 }
 
 func (s *Store) ClearInbox(ctx context.Context, addressBox string) (int64, error) {
-	key := fmt.Sprintf("inbox:%s", addressBox)
-	return s.client.Del(ctx, key).Result()
+	zKey := fmt.Sprintf("inbox:%s", addressBox)
+	hKey := fmt.Sprintf("emails:%s", addressBox)
+
+	return s.client.Del(ctx, zKey, hKey).Result()
 }
 
 func (s *Store) CheckRateLimit(ctx context.Context, key string, limit int, window time.Duration) (bool, int, error) {
-	now := time.Now()
 	key = fmt.Sprintf("ratelimit:%s", key)
 
-	pipe := s.client.Pipeline()
-	incr := pipe.Incr(ctx, key)
-	pipe.ExpireAt(ctx, key, now.Add(window))
-
-	_, err := pipe.Exec(ctx)
+	var count int64
+	ok, err := s.client.SetNX(ctx, key, 1, window).Result()
 	if err != nil {
 		return false, 0, err
 	}
 
-	count := int(incr.Val())
-	return count <= limit, limit - count, nil
+	if ok {
+		count = 1
+	} else {
+		count, err = s.client.Incr(ctx, key).Result()
+		if err != nil {
+			return false, 0, err
+		}
+	}
+
+	remaining := limit - int(count)
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	return count <= int64(limit), remaining, nil
+}
+
+func (s *Store) RegisterAddress(ctx context.Context, addressBox string, duration time.Duration) error {
+	key := fmt.Sprintf("active_address:%s", addressBox)
+	return s.client.Set(ctx, key, "1", duration).Err()
+}
+
+func (s *Store) IsAddressActive(ctx context.Context, addressBox string) (bool, error) {
+	key := fmt.Sprintf("active_address:%s", addressBox)
+
+	exists, err := s.client.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+
+	return exists > 0, nil
+}
+
+func (s *Store) CheckAndStoreNonce(ctx context.Context, nonce string, ttl time.Duration) (bool, error) {
+	key := fmt.Sprintf("nonce:%s", nonce)
+	return s.client.SetNX(ctx, key, "1", ttl).Result()
 }

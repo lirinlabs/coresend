@@ -1,0 +1,61 @@
+<svg width="232" height="256" viewBox="0 0 232 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .loader-part {
+      transform-origin: center;
+      transform-box: fill-box; 
+    }
+
+
+    .top-shape {
+      animation: spinTop 1.8s infinite;
+    }
+    
+    .bottom-shape {
+      animation: spinBottom 1.8s infinite;
+    }
+
+    @keyframes spinTop {
+      0% { 
+        transform: rotateY(0deg); 
+        animation-timing-function: cubic-bezier(0.68, -0.6, 0.32, 1.6); 
+      }
+      83.33% { 
+        transform: rotateY(360deg); 
+        animation-timing-function: linear; 
+      }
+      100% {
+        transform: rotateY(360deg); 
+      }
+    }
+
+    @keyframes spinBottom {
+      0% { 
+        transform: rotateY(0deg); 
+        animation-timing-function: linear; 
+      }
+      5.55% { 
+        transform: rotateY(0deg); 
+        animation-timing-function: cubic-bezier(0.68, -0.6, 0.32, 1.6); 
+      }
+      88.89% { 
+        transform: rotateY(360deg); 
+        animation-timing-function: linear; 
+      }
+      100% { 
+        transform: rotateY(360deg); 
+      }
+    }
+  </style>
+
+  <g class="loader-part top-shape">
+    <path d="M0 87.1432L41.153 118.634H181.073V105.875L52.1271 0H0V87.1432Z" fill="#FFFFFF"/>
+  </g>
+  
+  <g class="loader-part bottom-shape">
+    <path d="M0 175.101L41.153 137.366H181.073V150.125L52.1271 256H0V175.101Z" fill="#FFFFFF"/>
+  </g>
+  
+  <g class="square-shape">
+    <rect x="181.073" y="206.049" width="49.9512" height="49.9512" fill="#FFFFFF"/>
+  </g>
+</svg>

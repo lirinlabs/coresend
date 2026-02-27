@@ -1,4 +1,4 @@
-import { CaretRight } from '@phosphor-icons/react';
+import { CaretRightIcon } from '@phosphor-icons/react';
 import Typography from '../Typography/typography';
 
 interface InboxListHeaderProps {
@@ -24,7 +24,7 @@ export const InboxListHeader = ({ onToggleSidebar }: InboxListHeaderProps) => {
                 onClick={onToggleSidebar}
                 className='p-1 text-muted-foreground hover:text-foreground transition-colors'
             >
-                <CaretRight weight='bold' className='w-4 h-4' />
+                <CaretRightIcon weight='bold' className='w-4 h-4' />
             </button>
         </div>
     );
