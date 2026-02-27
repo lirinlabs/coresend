@@ -26,6 +26,7 @@ const Inbox = () => {
     >({});
 
     const emails = emailsByAccount[currentAddress] ?? [];
+
     const selectedEmailId = selectedByAccount[currentAddress] ?? null;
     const selectedEmail = emails.find((e) => e.id === selectedEmailId) ?? null;
 
