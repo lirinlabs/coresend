@@ -28,13 +28,15 @@ services:
       - HTTP_LISTEN_ADDR=:8080
       - SMTP_CERT_PATH=/caddy_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_NAME}/${DOMAIN_NAME}.crt
       - SMTP_KEY_PATH=/caddy_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_NAME}/${DOMAIN_NAME}.key
-      - STATIC_DIR=/srv/frontend 
+      - STATIC_DIR=/srv/frontend
     depends_on:
       redis:
         condition: service_healthy
+      caddy:
+        condition: service_started
     volumes:
       - caddy_data:/caddy_data:ro
-      - frontend_build:/srv/frontend:ro 
+      - frontend_build:/srv/frontend:ro
     networks:
       - coresend-network
     healthcheck:
@@ -59,7 +61,7 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-      - frontend_build:/srv/frontend 
+      - frontend_build:/srv/frontend
     depends_on:
       - backend
     networks:
