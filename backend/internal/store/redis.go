@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/fn-jakubkarp/coresend/internal/metrics"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
@@ -51,6 +52,11 @@ func (s *Store) Ping(ctx context.Context) error {
 }
 
 func (s *Store) SaveEmail(ctx context.Context, addressBox string, email Email) error {
+	start := time.Now()
+	defer func() {
+		metrics.RedisOperationDuration.WithLabelValues("save_email").Observe(time.Since(start).Seconds())
+	}()
+
 	if email.ID == "" {
 		email.ID = uuid.New().String()
 	}
@@ -81,6 +87,11 @@ func (s *Store) SaveEmail(ctx context.Context, addressBox string, email Email) e
 }
 
 func (s *Store) GetEmails(ctx context.Context, addressBox string) ([]Email, error) {
+	start := time.Now()
+	defer func() {
+		metrics.RedisOperationDuration.WithLabelValues("get_inbox").Observe(time.Since(start).Seconds())
+	}()
+
 	zKey := fmt.Sprintf("inbox:%s", addressBox)
 	hKey := fmt.Sprintf("emails:%s", addressBox)
 
@@ -163,6 +174,11 @@ func (s *Store) ClearInbox(ctx context.Context, addressBox string) (int64, error
 }
 
 func (s *Store) CheckRateLimit(ctx context.Context, key string, limit int, window time.Duration) (bool, int, error) {
+	start := time.Now()
+	defer func() {
+		metrics.RedisOperationDuration.WithLabelValues("check_rate_limit").Observe(time.Since(start).Seconds())
+	}()
+
 	key = fmt.Sprintf("ratelimit:%s", key)
 
 	var count int64
