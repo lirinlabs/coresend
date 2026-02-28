@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fn-jakubkarp/coresend/internal/metrics"
 	"github.com/fn-jakubkarp/coresend/internal/store"
 	"github.com/google/uuid"
 )
@@ -41,6 +42,8 @@ func rateLimitMiddleware(s store.EmailStore, config RateLimitConfig) func(http.H
 			}
 
 			if !allowed {
+				// Track rate limit hits
+				metrics.RateLimitHitsTotal.WithLabelValues(config.KeyPrefix).Inc()
 				writeError(w, ErrCodeRateLimitExceeded, "Rate limit exceeded", http.StatusTooManyRequests)
 				return
 			}
@@ -113,12 +116,76 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// responseWriter wraps http.ResponseWriter to capture status code
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func newResponseWriter(w http.ResponseWriter) *responseWriter {
+	return &responseWriter{w, http.StatusOK}
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		next.ServeHTTP(w, r)
-		log.Printf("%s %s %s", r.Method, r.URL.Path, time.Since(start))
+
+		// Normalize endpoint path (replace dynamic segments)
+		endpoint := normalizeEndpoint(r.URL.Path)
+
+		// Track in-flight requests
+		metrics.HTTPRequestsInFlight.WithLabelValues(endpoint).Inc()
+		defer metrics.HTTPRequestsInFlight.WithLabelValues(endpoint).Dec()
+
+		// Wrap response writer to capture status code
+		wrapped := newResponseWriter(w)
+
+		// Process request
+		next.ServeHTTP(wrapped, r)
+
+		// Record metrics
+		duration := time.Since(start).Seconds()
+		statusStr := strconv.Itoa(wrapped.statusCode)
+
+		metrics.HTTPRequestsTotal.WithLabelValues(r.Method, endpoint, statusStr).Inc()
+		metrics.HTTPRequestDuration.WithLabelValues(r.Method, endpoint).Observe(duration)
+
+		log.Printf("%s %s %d %s", r.Method, r.URL.Path, wrapped.statusCode, time.Since(start))
 	})
+}
+
+// normalizeEndpoint converts dynamic paths to templates for consistent metrics
+func normalizeEndpoint(path string) string {
+	// Replace UUID-like segments and hash-like segments with placeholders
+	parts := strings.Split(path, "/")
+	for i, part := range parts {
+		if len(part) == 0 {
+			continue
+		}
+		// Check if it looks like an address (40 hex chars) or email ID (UUID/hash)
+		if len(part) >= 32 || (len(part) > 8 && isHexOrAlphanumeric(part)) {
+			parts[i] = "{id}"
+		}
+	}
+	normalized := strings.Join(parts, "/")
+	if normalized == "" {
+		return "/"
+	}
+	return normalized
+}
+
+func isHexOrAlphanumeric(s string) bool {
+	for _, c := range s {
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			return false
+		}
+	}
+	return true
 }
 
 func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler {
@@ -130,17 +197,20 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 			nonce := r.Header.Get("X-Nonce")
 
 			if pubKeyHex == "" || sigHex == "" || tsStr == "" || nonce == "" {
+				metrics.AuthFailuresTotal.WithLabelValues("missing_headers").Inc()
 				writeError(w, ErrCodeUnauthorized, "Missing authentication headers", http.StatusUnauthorized)
 				return
 			}
 
 			if _, err := uuid.Parse(nonce); err != nil {
+				metrics.AuthFailuresTotal.WithLabelValues("invalid_nonce").Inc()
 				writeError(w, ErrCodeUnauthorized, "Invalid nonce format", http.StatusUnauthorized)
 				return
 			}
 
 			ts, err := strconv.ParseInt(tsStr, 10, 64)
 			if err != nil {
+				metrics.AuthFailuresTotal.WithLabelValues("invalid_timestamp").Inc()
 				writeError(w, ErrCodeUnauthorized, "Invalid timestamp format", http.StatusUnauthorized)
 				return
 			}
@@ -148,18 +218,21 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 			clientTime := time.Unix(ts, 0)
 			timeDiff := time.Since(clientTime)
 			if timeDiff > 5*time.Minute || timeDiff < -5*time.Minute {
+				metrics.AuthFailuresTotal.WithLabelValues("expired_timestamp").Inc()
 				writeError(w, ErrCodeUnauthorized, "Request expired or invalid timestamp", http.StatusUnauthorized)
 				return
 			}
 
 			pubKeyBytes, err := hex.DecodeString(pubKeyHex)
 			if err != nil || len(pubKeyBytes) != ed25519.PublicKeySize {
+				metrics.AuthFailuresTotal.WithLabelValues("invalid_pubkey").Inc()
 				writeError(w, ErrCodeUnauthorized, "Invalid public key format", http.StatusUnauthorized)
 				return
 			}
 
 			sigBytes, err := hex.DecodeString(sigHex)
 			if err != nil || len(sigBytes) != ed25519.SignatureSize {
+				metrics.AuthFailuresTotal.WithLabelValues("invalid_signature_format").Inc()
 				writeError(w, ErrCodeUnauthorized, "Invalid signature format", http.StatusUnauthorized)
 				return
 			}
@@ -169,10 +242,12 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 
 			address := r.PathValue("address")
 			if address == "" {
+				metrics.AuthFailuresTotal.WithLabelValues("missing_address").Inc()
 				writeError(w, ErrCodeUnauthorized, "Missing address parameter", http.StatusBadRequest)
 				return
 			}
 			if address != derivedAddress {
+				metrics.AuthFailuresTotal.WithLabelValues("address_mismatch").Inc()
 				writeError(w, ErrCodeUnauthorized, "Access denied: address does not match public key", http.StatusForbidden)
 				return
 			}
@@ -193,6 +268,7 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 				r.Method, r.URL.Path, tsStr, len(bodyBytes), bodyHashHex, nonce, payload)
 
 			if !ed25519.Verify(pubKeyBytes, []byte(payload), sigBytes) {
+				metrics.AuthFailuresTotal.WithLabelValues("signature_verification_failed").Inc()
 				writeError(w, ErrCodeUnauthorized, "Invalid cryptographic signature", http.StatusUnauthorized)
 				return
 			}
@@ -204,6 +280,7 @@ func signatureAuthMiddleware(s store.EmailStore) func(http.Handler) http.Handler
 				return
 			}
 			if !unique {
+				metrics.AuthFailuresTotal.WithLabelValues("nonce_reuse").Inc()
 				writeError(w, ErrCodeUnauthorized, "Nonce already used", http.StatusUnauthorized)
 				return
 			}
