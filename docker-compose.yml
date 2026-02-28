@@ -26,13 +26,15 @@ services:
       - DOMAIN_NAME=${DOMAIN_NAME}
       - SMTP_LISTEN_ADDR=:1025
       - HTTP_LISTEN_ADDR=:8080
-      - SMTP_CERT_PATH=/certs/${DOMAIN_NAME}/${DOMAIN_NAME}.crt
-      - SMTP_KEY_PATH=/certs/${DOMAIN_NAME}/${DOMAIN_NAME}.key
+      - SMTP_CERT_PATH=/caddy_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_NAME}/${DOMAIN_NAME}.crt
+      - SMTP_KEY_PATH=/caddy_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_NAME}/${DOMAIN_NAME}.key
+      - STATIC_DIR=/srv/frontend 
     depends_on:
       redis:
         condition: service_healthy
     volumes:
-      - caddy_certs:/certs:ro
+      - caddy_data:/caddy_data:ro
+      - frontend_build:/srv/frontend:ro 
     networks:
       - coresend-network
     healthcheck:
@@ -42,25 +44,36 @@ services:
       retries: 3
 
   caddy:
-    image: caddy:alpine
+    build:
+      context: ./app
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
+    env_file:
+      - .env
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME}
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./frontend/dist:/srv/frontend:ro
       - caddy_data:/data
-      - caddy_certs:/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory
       - caddy_config:/config
+      - frontend_build:/srv/frontend 
     depends_on:
       - backend
     networks:
       - coresend-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -87,9 +100,9 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
 
   prometheus:
     image: prom/prometheus:latest
@@ -98,9 +111,9 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=15d'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
     networks:
       - coresend-network
     depends_on:
@@ -110,27 +123,42 @@ services:
   grafana:
     image: grafana/grafana:latest
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     networks:
       - coresend-network
     depends_on:
       - prometheus
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - coresend-network
+    depends_on:
+      - caddy
 
 volumes:
   redis_data:
     driver: local
   caddy_data:
     driver: local
-  caddy_certs:
-    driver: local
   caddy_config:
     driver: local
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  frontend_build:
     driver: local
 
 networks:

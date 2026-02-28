@@ -1,13 +1,11 @@
 FROM oven/bun:1.3-alpine AS builder
 WORKDIR /app
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+RUN bun install
 COPY . .
-RUN bun run build --minify --outdir=out 
+RUN bun run build --minify
 
-# --- Final Stage ---
-FROM caddy:2.7-alpine
-COPY --from=builder /app/out /srv/frontend
+FROM caddy:2.11.1-alpine
+COPY --from=builder /app/dist /srv/frontend
 COPY Caddyfile /etc/caddy/Caddyfile
-RUN chown -R caddy:caddy /srv/frontend
 EXPOSE 80 443 443/udp
