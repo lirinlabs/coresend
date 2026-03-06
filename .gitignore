@@ -59,3 +59,7 @@ logs/
 tmp/
 temp/
 *.tmp
+
+# Terraform
+*tfvars
+*tfstate
