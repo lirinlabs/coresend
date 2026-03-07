@@ -31,7 +31,7 @@ definitions:
         type: string
       to:
         example:
-        - a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev
+        - a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.io
         items:
           type: string
         type: array
@@ -74,7 +74,7 @@ definitions:
         example: 5
         type: integer
       email:
-        example: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev
+        example: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.io
         type: string
       emails:
         items:
