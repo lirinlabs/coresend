@@ -16,7 +16,7 @@ func NewRouter(s store.EmailStore, domain string, staticDir string) http.Handler
 	inboxLimit := RateLimitConfig{Limit: 60, Window: time.Minute, KeyPrefix: "inbox"}
 	deleteLimit := RateLimitConfig{Limit: 30, Window: time.Minute, KeyPrefix: "delete"}
 
-	mux.HandleFunc("/", wrap(serveStatic(staticDir), securityHeadersMiddleware, loggingMiddleware))
+	mux.HandleFunc("GET /", wrap(serveStatic(staticDir), securityHeadersMiddleware, loggingMiddleware))
 	mux.HandleFunc("POST /api/register/{address}", wrap(handler.handleRegister, loggingMiddleware, corsMiddleware, signatureAuthMiddleware(s)))
 
 	mux.HandleFunc("GET /api/inbox/{address}", wrap(handler.handleGetInbox, loggingMiddleware, corsMiddleware, signatureAuthMiddleware(s), rateLimitMiddleware(s, inboxLimit)))

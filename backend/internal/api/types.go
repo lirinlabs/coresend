@@ -8,7 +8,7 @@ type RegisterResponse struct {
 type EmailResponse struct {
 	ID         string   `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" binding:"required"`
 	From       string   `json:"from" example:"sender@example.com"`
-	To         []string `json:"to" example:"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev"`
+	To         []string `json:"to" example:"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.io"`
 	Subject    string   `json:"subject" example:"Hello World"`
 	Body       string   `json:"body" example:"This is the email body content"`
 	ReceivedAt string   `json:"received_at" example:"2024-01-01T12:00:00Z"`
@@ -16,7 +16,7 @@ type EmailResponse struct {
 
 type InboxResponse struct {
 	Address string          `json:"address" example:"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"`
-	Email   string          `json:"email" example:"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev"`
+	Email   string          `json:"email" example:"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.io"`
 	Count   int             `json:"count" example:"5"`
 	Emails  []EmailResponse `json:"emails"`
 }

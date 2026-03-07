@@ -345,7 +345,7 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "example": [
-                        "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev"
+                        "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.io"
                     ]
                 }
             }
@@ -403,7 +403,7 @@ const docTemplate = `{
                 },
                 "email": {
                     "type": "string",
-                    "example": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.dev"
+                    "example": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2@coresend.io"
                 },
                 "emails": {
                     "type": "array",
