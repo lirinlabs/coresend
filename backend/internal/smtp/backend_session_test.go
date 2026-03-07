@@ -75,9 +75,6 @@ func (f *smtpFakeStore) Ping(ctx context.Context) error {
 }
 
 func (f *smtpFakeStore) CheckAndStoreNonce(ctx context.Context, nonce string, ttl time.Duration) (bool, error) {
-	if !f.checkNonceResp {
-		return true, nil
-	}
 	return f.checkNonceResp, nil
 }
 

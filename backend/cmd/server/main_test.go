@@ -67,11 +67,6 @@ func unsetEnvForTest(t *testing.T, key string) {
 			if err := os.Setenv(key, originalValue); err != nil {
 				t.Fatalf("failed to restore %q: %v", key, err)
 			}
-			return
-		}
-
-		if err := os.Unsetenv(key); err != nil {
-			t.Fatalf("failed to cleanup %q: %v", key, err)
 		}
 	})
 }
