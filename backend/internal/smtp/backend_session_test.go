@@ -15,14 +15,23 @@ import (
 const smtpValidHexAddress = "0123456789abcdef0123456789abcdef01234567"
 
 type smtpFakeStore struct {
-	saveEmailFn       func(ctx context.Context, addressBox string, email store.Email) error
-	isAddressActiveFn func(ctx context.Context, addressBox string) (bool, error)
+	saveEmailFn          func(ctx context.Context, addressBox string, email store.Email) error
+	getEmailsFn          func(ctx context.Context, addressBox string) ([]store.Email, error)
+	getEmailFn           func(ctx context.Context, addressBox string, emailID string) (*store.Email, error)
+	deleteEmailFn        func(ctx context.Context, addressBox string, emailID string) error
+	clearInboxFn         func(ctx context.Context, addressBox string) (int64, error)
+	checkRateLimitFn     func(ctx context.Context, key string, limit int, window time.Duration) (bool, int, error)
+	registerAddressFn    func(ctx context.Context, addressBox string, duration time.Duration) error
+	isAddressActiveFn    func(ctx context.Context, addressBox string) (bool, error)
+	pingFn               func(ctx context.Context) error
+	checkAndStoreNonceFn func(ctx context.Context, nonce string, ttl time.Duration) (bool, error)
 
 	saveCalls      []smtpSaveCall
 	isActiveCalls  []string
 	pingErr        error
 	registerErr    error
 	checkNonceResp bool
+	checkNonceSet  bool
 }
 
 type smtpSaveCall struct {
@@ -39,27 +48,48 @@ func (f *smtpFakeStore) SaveEmail(ctx context.Context, addressBox string, email 
 }
 
 func (f *smtpFakeStore) GetEmails(ctx context.Context, addressBox string) ([]store.Email, error) {
-	return nil, nil
+	if f.getEmailsFn != nil {
+		return f.getEmailsFn(ctx, addressBox)
+	}
+	panic(fmt.Sprintf("unexpected GetEmails call: addressBox=%q", addressBox))
 }
 
 func (f *smtpFakeStore) GetEmail(ctx context.Context, addressBox string, emailID string) (*store.Email, error) {
-	return nil, nil
+	if f.getEmailFn != nil {
+		return f.getEmailFn(ctx, addressBox, emailID)
+	}
+	panic(fmt.Sprintf("unexpected GetEmail call: addressBox=%q emailID=%q", addressBox, emailID))
 }
 
 func (f *smtpFakeStore) DeleteEmail(ctx context.Context, addressBox string, emailID string) error {
-	return nil
+	if f.deleteEmailFn != nil {
+		return f.deleteEmailFn(ctx, addressBox, emailID)
+	}
+	panic(fmt.Sprintf("unexpected DeleteEmail call: addressBox=%q emailID=%q", addressBox, emailID))
 }
 
 func (f *smtpFakeStore) ClearInbox(ctx context.Context, addressBox string) (int64, error) {
-	return 0, nil
+	if f.clearInboxFn != nil {
+		return f.clearInboxFn(ctx, addressBox)
+	}
+	panic(fmt.Sprintf("unexpected ClearInbox call: addressBox=%q", addressBox))
 }
 
 func (f *smtpFakeStore) CheckRateLimit(ctx context.Context, key string, limit int, window time.Duration) (bool, int, error) {
-	return true, 0, nil
+	if f.checkRateLimitFn != nil {
+		return f.checkRateLimitFn(ctx, key, limit, window)
+	}
+	panic(fmt.Sprintf("unexpected CheckRateLimit call: key=%q limit=%d window=%s", key, limit, window))
 }
 
 func (f *smtpFakeStore) RegisterAddress(ctx context.Context, addressBox string, duration time.Duration) error {
-	return f.registerErr
+	if f.registerAddressFn != nil {
+		return f.registerAddressFn(ctx, addressBox, duration)
+	}
+	if f.registerErr != nil {
+		return f.registerErr
+	}
+	panic(fmt.Sprintf("unexpected RegisterAddress call: addressBox=%q duration=%s", addressBox, duration))
 }
 
 func (f *smtpFakeStore) IsAddressActive(ctx context.Context, addressBox string) (bool, error) {
@@ -67,15 +97,27 @@ func (f *smtpFakeStore) IsAddressActive(ctx context.Context, addressBox string) 
 	if f.isAddressActiveFn != nil {
 		return f.isAddressActiveFn(ctx, addressBox)
 	}
-	return true, nil
+	panic(fmt.Sprintf("unexpected IsAddressActive call: addressBox=%q", addressBox))
 }
 
 func (f *smtpFakeStore) Ping(ctx context.Context) error {
-	return f.pingErr
+	if f.pingFn != nil {
+		return f.pingFn(ctx)
+	}
+	if f.pingErr != nil {
+		return f.pingErr
+	}
+	panic("unexpected Ping call")
 }
 
 func (f *smtpFakeStore) CheckAndStoreNonce(ctx context.Context, nonce string, ttl time.Duration) (bool, error) {
-	return f.checkNonceResp, nil
+	if f.checkAndStoreNonceFn != nil {
+		return f.checkAndStoreNonceFn(ctx, nonce, ttl)
+	}
+	if f.checkNonceSet {
+		return f.checkNonceResp, nil
+	}
+	panic(fmt.Sprintf("unexpected CheckAndStoreNonce call: nonce=%q ttl=%s", nonce, ttl))
 }
 
 func requireSMTPErrorCode(t *testing.T, err error, wantCode int) {
@@ -276,8 +318,9 @@ func TestSession_Data(t *testing.T) {
 	t.Run("invalid reader returns parse error", func(t *testing.T) {
 		t.Parallel()
 
+		fakeStore := &smtpFakeStore{}
 		session := &Session{
-			Store: &smtpFakeStore{},
+			Store: fakeStore,
 			From:  "sender@example.com",
 			To:    []string{"recipient-a"},
 		}
@@ -285,6 +328,9 @@ func TestSession_Data(t *testing.T) {
 		err := session.Data(forcedReadErrorReader{})
 		if err == nil {
 			t.Fatalf("Data() expected error")
+		}
+		if len(fakeStore.saveCalls) != 0 {
+			t.Fatalf("save call count = %d, want 0", len(fakeStore.saveCalls))
 		}
 	})
 
@@ -434,7 +480,7 @@ func TestSession_ResetAndLogout(t *testing.T) {
 	if session.From != "" {
 		t.Fatalf("From after reset = %q, want empty", session.From)
 	}
-	if session.To != nil {
+	if len(session.To) != 0 {
 		t.Fatalf("To after reset = %v, want nil", session.To)
 	}
 

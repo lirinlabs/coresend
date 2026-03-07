@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/fn-jakubkarp/coresend/internal/store"
+	"github.com/google/uuid"
 )
 
 func newSignedRouteRequest(t *testing.T, method, pathTemplate string, body []byte, at time.Time) (*http.Request, string) {
@@ -31,7 +32,7 @@ func newSignedRouteRequest(t *testing.T, method, pathTemplate string, body []byt
 	address := hex.EncodeToString(hash[:])[:40]
 	path := strings.Replace(pathTemplate, "{address}", address, 1)
 
-	nonce := "6f32f622-e2be-47f3-bdb4-80c77a7b4f48"
+	nonce := uuid.NewString()
 	timestamp := strconv.FormatInt(at.Unix(), 10)
 	bodyHash := sha256.Sum256(body)
 	bodyHashHex := hex.EncodeToString(bodyHash[:])
@@ -172,27 +173,28 @@ func TestNewRouter_ProtectedRoutes_PassWithValidAuth(t *testing.T) {
 	t.Parallel()
 
 	mailTime := time.Date(2024, time.January, 2, 3, 4, 5, 0, time.UTC)
-	fakeStore := &fakeEmailStore{
-		getEmailsFn: func(ctx context.Context, addressBox string) ([]store.Email, error) {
-			return []store.Email{
-				{
-					ID:         "id-1",
-					From:       "sender@example.com",
-					To:         []string{addressBox + "@coresend.dev"},
-					Subject:    "Subject",
-					Body:       "Body",
-					ReceivedAt: mailTime,
-				},
-			}, nil
-		},
-		deleteEmailFn: func(ctx context.Context, addressBox string, emailID string) error {
-			return nil
-		},
-	}
-	router := NewRouter(fakeStore, "coresend.dev", writeStaticFixture(t))
 
 	t.Run("inbox route success", func(t *testing.T) {
 		t.Parallel()
+
+		fakeStore := &fakeEmailStore{
+			getEmailsFn: func(ctx context.Context, addressBox string) ([]store.Email, error) {
+				return []store.Email{
+					{
+						ID:         "id-1",
+						From:       "sender@example.com",
+						To:         []string{addressBox + "@coresend.dev"},
+						Subject:    "Subject",
+						Body:       "Body",
+						ReceivedAt: mailTime,
+					},
+				}, nil
+			},
+			deleteEmailFn: func(ctx context.Context, addressBox string, emailID string) error {
+				return nil
+			},
+		}
+		router := NewRouter(fakeStore, "coresend.dev", writeStaticFixture(t))
 
 		req, address := newSignedRouteRequest(t, http.MethodGet, "/api/inbox/{address}", nil, time.Now())
 		rr := httptest.NewRecorder()
@@ -211,6 +213,25 @@ func TestNewRouter_ProtectedRoutes_PassWithValidAuth(t *testing.T) {
 
 	t.Run("delete route success", func(t *testing.T) {
 		t.Parallel()
+
+		fakeStore := &fakeEmailStore{
+			getEmailsFn: func(ctx context.Context, addressBox string) ([]store.Email, error) {
+				return []store.Email{
+					{
+						ID:         "id-1",
+						From:       "sender@example.com",
+						To:         []string{addressBox + "@coresend.dev"},
+						Subject:    "Subject",
+						Body:       "Body",
+						ReceivedAt: mailTime,
+					},
+				}, nil
+			},
+			deleteEmailFn: func(ctx context.Context, addressBox string, emailID string) error {
+				return nil
+			},
+		}
+		router := NewRouter(fakeStore, "coresend.dev", writeStaticFixture(t))
 
 		req, address := newSignedRouteRequest(t, http.MethodDelete, "/api/inbox/{address}/email-1", nil, time.Now())
 		rr := httptest.NewRecorder()
