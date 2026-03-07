@@ -1,0 +1,65 @@
+http://www.{$DOMAIN_NAME} {
+    redir http://{$DOMAIN_NAME}{uri} permanent
+}
+
+http://localhost {
+    respond 200 {
+        body "healthy"
+    }
+}
+
+http://{$DOMAIN_NAME} {
+    header {
+        X-Frame-Options DENY
+        X-Content-Type-Options nosniff
+        X-XSS-Protection "1; mode=block"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+
+    @static path *.js *.css *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2
+    handle @static {
+        root * /srv/frontend
+        file_server
+        header Cache-Control "public, max-age=31536000, immutable"
+    }
+
+    handle {
+        reverse_proxy backend:8080
+    }
+
+    log {
+        output stdout
+        format console
+    }
+}
+
+http://grafana.{$DOMAIN_NAME} {
+    basicauth {
+        admin {$CADDY_GRAFANA_AUTH}
+    }
+    reverse_proxy grafana:3000
+    
+    header {
+        X-Frame-Options SAMEORIGIN
+        -Server
+    }
+}
+
+http://prometheus.{$DOMAIN_NAME} {
+    basicauth {
+        admin {$CADDY_PROMETHEUS_AUTH}
+    }
+    reverse_proxy prometheus:9090
+    
+    header {
+        X-Frame-Options SAMEORIGIN
+        -Server
+    }
+}
+
+http://mail.{$DOMAIN_NAME} {
+        respond 200 {
+        body "mail healthy"
+    }
+}

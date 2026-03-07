@@ -10,6 +10,7 @@ import (
 
 	"github.com/emersion/go-message/mail"
 	gosmtp "github.com/emersion/go-smtp"
+	"github.com/fn-jakubkarp/coresend/internal/metrics"
 	"github.com/fn-jakubkarp/coresend/internal/store"
 	"github.com/fn-jakubkarp/coresend/internal/validator"
 )
@@ -19,6 +20,8 @@ type Backend struct {
 }
 
 func (bkd *Backend) NewSession(c *gosmtp.Conn) (gosmtp.Session, error) {
+	// Track active SMTP sessions
+	metrics.SMTPSessionsActive.Inc()
 	return &Session{Store: bkd.Store}, nil
 }
 
@@ -41,6 +44,7 @@ func (s *Session) Rcpt(to string, opts *gosmtp.RcptOptions) error {
 
 	if !validator.IsValidHexAddress(localPart) {
 		log.Printf("Rejected malformed address: %s", to)
+		metrics.SMTPEmailsRejectedTotal.WithLabelValues("invalid_address_format").Inc()
 		return &gosmtp.SMTPError{
 			Code:         550,
 			EnhancedCode: gosmtp.EnhancedCode{5, 1, 1},
@@ -63,6 +67,7 @@ func (s *Session) Rcpt(to string, opts *gosmtp.RcptOptions) error {
 
 	if !isValid {
 		log.Printf("Rejected inactive address: %s", to)
+		metrics.SMTPEmailsRejectedTotal.WithLabelValues("inactive_address").Inc()
 		return &gosmtp.SMTPError{
 			Code:         550,
 			EnhancedCode: gosmtp.EnhancedCode{5, 1, 1},
@@ -148,9 +153,12 @@ func (s *Session) Data(r io.Reader) error {
 	}
 
 	if lastErr != nil {
+		metrics.SMTPEmailsRejectedTotal.WithLabelValues("storage_error").Inc()
 		return fmt.Errorf("failed to save email to one or more recipients: %w", lastErr)
 	}
 
+	// Track successful email reception
+	metrics.SMTPEmailsReceivedTotal.Inc()
 	log.Printf("Email saved to %d recipient(s)", len(s.To))
 	return nil
 }
@@ -161,5 +169,7 @@ func (s *Session) Reset() {
 }
 
 func (s *Session) Logout() error {
+	// Decrement active sessions on logout
+	metrics.SMTPSessionsActive.Dec()
 	return nil
 }

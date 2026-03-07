@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/fn-jakubkarp/coresend/internal/store"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -24,6 +25,7 @@ func NewRouter(s store.EmailStore, domain string, staticDir string) http.Handler
 	mux.HandleFunc("DELETE /api/inbox/{address}", wrap(handler.handleClearInbox, loggingMiddleware, corsMiddleware, signatureAuthMiddleware(s), rateLimitMiddleware(s, deleteLimit)))
 
 	mux.HandleFunc("GET /api/health", wrap(handler.handleHealth, loggingMiddleware, corsMiddleware))
+	mux.Handle("GET /metrics", promhttp.Handler())
 	mux.HandleFunc("GET /docs/", httpSwagger.WrapHandler)
 
 	return mux
